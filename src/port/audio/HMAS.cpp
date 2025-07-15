@@ -83,6 +83,7 @@ void HMAS::Play(HMAS_ChannelId channelId, HMAS_AudioId id, bool loop) {
     ma_sound_set_pitch(&sample.sound, pitch);
     ma_sound_set_volume(&sample.sound, volume);
     ma_sound_set_looping(&sample.sound, loop);
+    ma_sound_seek_to_pcm_frame(&sample.sound, 0);
     ma_result result = ma_sound_start(&sample.sound);
     if (result != MA_SUCCESS) {
         SPDLOG_ERROR("Failed to start sound: {}", ma_result_description(result));

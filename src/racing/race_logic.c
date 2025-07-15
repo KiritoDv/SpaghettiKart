@@ -24,6 +24,7 @@
 #include "menus.h"
 #include "sounds.h"
 #include "port/Game.h"
+#include "port/audio/HMAS.h"
 
 #pragma intrinsic(sqrtf)
 
@@ -415,6 +416,9 @@ void func_8028EC38(s32 arg0) {
     D_800DC5B0 = 1;
     D_800DC5B8 = 0;
     D_802BA038 = 5;
+    if(HMAS_IsPlaying(HMAS_MUSIC)) {
+        HMAS_AddEffect(HMAS_MUSIC, HMAS_EFFECT_VOLUME, HMAS_LINEAR, 10, 0.0f);
+    }
 }
 
 void func_8028EC98(s32 arg0) {
