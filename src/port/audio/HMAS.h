@@ -56,7 +56,7 @@ public:
     ~HMAS();
 
     void RegisterSound(HMAS_AudioId id, const std::string& filePath);
-    void RegisterSound(HMAS_AudioId id, std::vector<uint8_t>& buffer);
+    void RegisterSound(HMAS_AudioId id, std::vector<char>& buffer);
 
     void Play(HMAS_ChannelId channel, HMAS_AudioId id, bool loop = false);
     void Stop(HMAS_ChannelId channel);

@@ -32,9 +32,11 @@ void HMAS::RegisterSound(HMAS_AudioId id, const std::string& filePath) {
         SPDLOG_ERROR("Failed to load sound from file {}: {}", filePath, ma_result_description(result));
         return;
     }
+
+    SPDLOG_INFO("Sound with ID {} registered from file {}", static_cast<int>(id), filePath);
 }
 
-void HMAS::RegisterSound(HMAS_AudioId id, std::vector<uint8_t>& buffer) {
+void HMAS::RegisterSound(HMAS_AudioId id, std::vector<char>& buffer) {
     if (gRegistry.find(id) != gRegistry.end()) {
         SPDLOG_WARN("Sound with ID {} already registered", static_cast<int>(id));
         return;
@@ -54,6 +56,8 @@ void HMAS::RegisterSound(HMAS_AudioId id, std::vector<uint8_t>& buffer) {
         SPDLOG_ERROR("Failed to load sound from memory: {}", ma_result_description(result));
         return;
     }
+
+    SPDLOG_INFO("Sound with ID {} registered from memory buffer", static_cast<int>(id));
 }
 
 void HMAS::Play(HMAS_ChannelId channelId, HMAS_AudioId id, bool loop) {

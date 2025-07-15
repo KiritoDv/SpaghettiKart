@@ -235,40 +235,6 @@ namespace Editor {
         }
     }
 
-    MusicSeq TrackPropertiesWindow::StringToMusicSeq(const char* str) const {
-        if(strcmp(str, "None") == 0) return MUSIC_SEQ_00;
-        if(strcmp(str, "Title Screen") == 0) return MUSIC_SEQ_TITLE_SCREEN;
-        if(strcmp(str, "Main Menu") == 0) return MUSIC_SEQ_MAIN_MENU;
-        if(strcmp(str, "Raceways Wario Stadium") == 0) return MUSIC_SEQ_RACEWAYS_WARIO_STADIUM;
-        if(strcmp(str, "Moo Moo Farm / Yoshi Valley") == 0) return MUSIC_SEQ_MOO_MOO_FARM_YOSHI_VALLEY;
-        if(strcmp(str, "Choco Mountain") == 0) return MUSIC_SEQ_CHOCO_MOUNTAIN;
-        if(strcmp(str, "Koopa Troopa Beach") == 0) return MUSIC_SEQ_KOOPA_TROOPA_BEACH;
-        if(strcmp(str, "Banshee Boardwalk") == 0) return MUSIC_SEQ_BANSHEE_BOARDWALK;
-        if(strcmp(str, "Frappe Snowland") == 0) return MUSIC_SEQ_FRAPPE_SNOWLAND;
-        if(strcmp(str, "Bowser's Castle") == 0) return MUSIC_SEQ_BOWSERS_CASTLE;
-        if(strcmp(str, "Kalimari Desert") == 0) return MUSIC_SEQ_KALIMARI_DESERT;
-        if(strcmp(str, "Start Grid GP/VS") == 0) return MUSIC_SEQ_START_GRID_GP_VS;
-        if(strcmp(str, "Final Lap Fanfare") == 0) return MUSIC_SEQ_FINAL_LAP_FANFARE;
-        if(strcmp(str, "Finish 1st Place") == 0) return MUSIC_SEQ_FINISH_1ST_PLACE;
-        if(strcmp(str, "Finish 2nd-4th Place") == 0) return MUSIC_SEQ_FINISH_2ND_4TH_PLACE;
-        if(strcmp(str, "Finish 5th-8th Place") == 0) return MUSIC_SEQ_FINISH_5TH_8TH_PLACE;
-        if(strcmp(str, "16") == 0) return MUSIC_SEQ_16;
-        if(strcmp(str, "Star Jingle") == 0) return MUSIC_SEQ_STAR_JINGLE;
-        if(strcmp(str, "Rainbow Road") == 0) return MUSIC_SEQ_RAINBOW_ROAD;
-        if(strcmp(str, "DK Jungle") == 0) return MUSIC_SEQ_DK_JUNGLE;
-        if(strcmp(str, "Game Over") == 0) return MUSIC_SEQ_GAME_OVER;
-        if(strcmp(str, "Toad's Turnpike") == 0) return MUSIC_SEQ_TOADS_TURNPIKE;
-        if(strcmp(str, "Start Grid Time Attack") == 0) return MUSIC_SEQ_START_GIRD_TIME_ATTACK;
-        if(strcmp(str, "VS Battle Results") == 0) return MUSIC_SEQ_VS_BATTLE_RESULTS;
-        if(strcmp(str, "Losing Results") == 0) return MUSIC_SEQ_LOSING_RESULTS;
-        if(strcmp(str, "Battle Arenas") == 0) return MUSIC_SEQ_BATTLE_ARENAS;
-        if(strcmp(str, "Award Ceremony Buildup") == 0) return MUSIC_SEQ_AWARD_CEREMONY_BUILDUP;
-        if(strcmp(str, "Award Ceremony 1st-3rd") == 0) return MUSIC_SEQ_AWARD_CEREMONY_1ST_3RD;
-        if(strcmp(str, "Staff Roll") == 0) return MUSIC_SEQ_STAFF_ROLL;
-        if(strcmp(str, "Award Ceremony 4th-8th") == 0) return MUSIC_SEQ_AWARD_CEREMONY_4TH_8TH;
-        return MUSIC_SEQ_UNKNOWN; // Default case if no match found
-    }
-
     void TrackPropertiesWindow::DrawLight() {
         // Convert and pass to ImGui ColorEdit3
         

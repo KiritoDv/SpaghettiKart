@@ -1,8 +1,8 @@
 #include "AudioSequenceFactory.h"
-#include "../type/AudioSequence.h"
 #include "../type/AudioBank.h"
-#include "spdlog/spdlog.h"
 #include "port/Engine.h"
+
+std::vector<std::string> extension = {".wav", ".ogg", ".mp3", ".flac", ".WAV", ".OGG", ".MP3", ".FLAC"};
 
 std::shared_ptr<Ship::IResource>
 SM64::AudioSequenceFactoryV0::ReadResource(std::shared_ptr<Ship::File> file,
@@ -30,6 +30,16 @@ SM64::AudioSequenceFactoryV0::ReadResource(std::shared_ptr<Ship::File> file,
     bank->mData.banks = bank->banks.data();
     bank->mData.data = bank->sampleData.data();
     bank->mData.id = id;
+
+    for (const auto& ext : extension) {
+        auto custom = Ship::Context::GetInstance()->GetResourceManager()->LoadFileProcess(initData->Path + ext);
+
+        if (custom != nullptr) {
+            auto buffer = custom->Buffer.get();
+            GameEngine::Instance->gHMAS->RegisterSound(id, *buffer);
+            break;
+        }
+    }
 
     return bank;
 }
