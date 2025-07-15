@@ -93,6 +93,7 @@ void HMAS_Play(enum HMAS_ChannelId channel, HMAS_AudioId id, bool loop);
 void HMAS_Stop(enum HMAS_ChannelId channel);
 bool HMAS_IsPlaying(enum HMAS_ChannelId channel);
 void HMAS_SetPitch(enum HMAS_ChannelId channel, float pitch);
+void HMAS_SetVolume(enum HMAS_ChannelId channel, float volume);
 void HMAS_SetPause(enum HMAS_ChannelId channel, bool pause);
 void HMAS_AddEffect(enum HMAS_ChannelId channel, enum HMAS_EffectType type, enum HMAS_EffectTransition transition, uint32_t frames, float target);
 bool HMAS_IsIDRegistered(HMAS_AudioId id);

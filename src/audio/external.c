@@ -3209,6 +3209,10 @@ void func_800C9EF4(Vec3f arg0, u32 soundBits) {
 }
 
 void func_800C9F90(u8 arg0) {
+    if(HMAS_IsPlaying(HMAS_MUSIC)) {
+        HMAS_SetVolume(HMAS_MUSIC, arg0 == 1 ? 0.15f : 0.9f);
+    }
+
     if ((arg0) != 0) {
         play_sound2(SOUND_ACTION_GO_BACK_2);
         func_800CBBB8(0xF1000000, 0);

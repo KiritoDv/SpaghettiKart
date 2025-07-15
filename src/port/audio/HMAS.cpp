@@ -254,6 +254,10 @@ extern "C" void HMAS_SetPitch(HMAS_ChannelId channelId, float pitch) {
     GameEngine::Instance->gHMAS->SetPitch(channelId, pitch);
 }
 
+extern "C" void HMAS_SetVolume(HMAS_ChannelId channelId, float volume) {
+    GameEngine::Instance->gHMAS->SetVolume(channelId, volume);
+}
+
 extern "C" void HMAS_SetPause(HMAS_ChannelId channelId, bool pause) {
     GameEngine::Instance->gHMAS->SetPause(channelId, pause);
 }
