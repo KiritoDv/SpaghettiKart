@@ -21,7 +21,7 @@ HMAS::HMAS() {
     }
 }
 
-void HMAS::RegisterSound(HMAS_AudioId id, const std::string& filePath) {
+void HMAS::RegisterSound(HMAS_AudioId id, const std::string& filePath, HMAS_Loop loop) {
     if (gRegistry.find(id) != gRegistry.end()) {
         SPDLOG_WARN("Sound with ID {} already registered", static_cast<int>(id));
         return;
@@ -33,10 +33,16 @@ void HMAS::RegisterSound(HMAS_AudioId id, const std::string& filePath) {
         return;
     }
 
+    if(loop.start != -1 && loop.end != -1) {
+        ma_data_source* source = ma_sound_get_data_source(&gRegistry[id].sound);
+        ma_data_source_set_loop_point_in_pcm_frames(source, loop.start, loop.end);
+    }
+
+    gRegistry[id].loop = loop;
     SPDLOG_INFO("Sound with ID {} registered from file {}", static_cast<int>(id), filePath);
 }
 
-void HMAS::RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size) {
+void HMAS::RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size, HMAS_Loop loop) {
     if (gRegistry.find(id) != gRegistry.end()) {
         SPDLOG_WARN("Sound with ID {} already registered", static_cast<int>(id));
         return;
@@ -49,12 +55,18 @@ void HMAS::RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size) {
         return;
     }
 
+    if(loop.start != -1 && loop.end != -1) {
+        ma_data_source_set_loop_point_in_pcm_frames(&gRegistry[id].decoder, loop.start, loop.end);
+    }
+
     result = ma_sound_init_from_data_source(&gAudioEngine, &gRegistry[id].decoder, 0, NULL, &gRegistry[id].sound);
 
     if (result != MA_SUCCESS) {
         SPDLOG_ERROR("Failed to load sound from memory: {}", ma_result_description(result));
         return;
     }
+
+    gRegistry[id].loop = loop;
 
     SPDLOG_INFO("Sound with ID {} registered from memory buffer", static_cast<int>(id));
 }

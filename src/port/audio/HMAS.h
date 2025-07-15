@@ -29,9 +29,16 @@ enum HMAS_EffectTransition {
 #include <unordered_map>
 #include "audio/miniaudio.h"
 
+struct HMAS_Loop {
+    int64_t start;
+    int64_t end;
+};
+
 struct HMAS_Sample {
     ma_sound sound;
     ma_decoder decoder;
+
+    HMAS_Loop loop;
 };
 
 struct HMAS_Effect {
@@ -56,8 +63,8 @@ public:
     HMAS();
     ~HMAS();
 
-    void RegisterSound(HMAS_AudioId id, const std::string& filePath);
-    void RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size);
+    void RegisterSound(HMAS_AudioId id, const std::string& filePath, HMAS_Loop loop = {-1, -1});
+    void RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size, HMAS_Loop loop = {-1, -1});
 
     void Play(HMAS_ChannelId channel, HMAS_AudioId id, bool loop = false);
     void Stop(HMAS_ChannelId channel);

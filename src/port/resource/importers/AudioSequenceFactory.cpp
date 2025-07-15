@@ -1,6 +1,7 @@
 #include "AudioSequenceFactory.h"
 #include "../type/AudioBank.h"
 #include "port/Engine.h"
+#include <nlohmann/json.hpp>
 
 std::vector<std::string> extension = {".wav", ".ogg", ".mp3", ".flac", ".WAV", ".OGG", ".MP3", ".FLAC"};
 
@@ -36,7 +37,23 @@ SM64::AudioSequenceFactoryV0::ReadResource(std::shared_ptr<Ship::File> file,
 
         if (custom != nullptr) {
             bank->sampleData = std::vector<uint8_t>(custom->Buffer->begin(), custom->Buffer->end());
-            GameEngine::Instance->gHMAS->RegisterSound(id, bank->sampleData.data(), bank->sampleData.size());
+            uint8_t* data = bank->sampleData.data();
+            size_t size = bank->sampleData.size();
+
+            auto metadata = Ship::Context::GetInstance()->GetResourceManager()->LoadFileProcess(initData->Path + ".json");
+            if (metadata != nullptr) {
+                auto json = nlohmann::json::parse(std::string(metadata->Buffer->begin(), metadata->Buffer->end()));
+                HMAS_Loop loop = { -1, -1 };
+
+                if (json.contains("loop")) {
+                    loop.start = json["loop"].value("start", -1);
+                    loop.end = json["loop"].value("end", -1);
+                }
+
+                GameEngine::Instance->gHMAS->RegisterSound(id, data, size, loop);
+            } else {
+                GameEngine::Instance->gHMAS->RegisterSound(id, data, size);
+            }
             break;
         }
     }
