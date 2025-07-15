@@ -555,6 +555,9 @@ void GameEngine::AudioInit() {
     }
 
     for (auto& sequence : *sequences_files) {
+        if (sequence.find('.') != std::string::npos) {
+            continue;
+        }
         auto path = "__OTR__" + sequence;
         auto seq = static_cast<AudioSequenceData*>(ResourceGetDataByName(path.c_str()));
         Instance->sequenceTable[seq->id] = path;

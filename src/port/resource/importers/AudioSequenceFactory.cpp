@@ -35,8 +35,8 @@ SM64::AudioSequenceFactoryV0::ReadResource(std::shared_ptr<Ship::File> file,
         auto custom = Ship::Context::GetInstance()->GetResourceManager()->LoadFileProcess(initData->Path + ext);
 
         if (custom != nullptr) {
-            auto buffer = custom->Buffer.get();
-            GameEngine::Instance->gHMAS->RegisterSound(id, *buffer);
+            bank->sampleData = std::vector<uint8_t>(custom->Buffer->begin(), custom->Buffer->end());
+            GameEngine::Instance->gHMAS->RegisterSound(id, bank->sampleData.data(), bank->sampleData.size());
             break;
         }
     }

@@ -36,21 +36,20 @@ void HMAS::RegisterSound(HMAS_AudioId id, const std::string& filePath) {
     SPDLOG_INFO("Sound with ID {} registered from file {}", static_cast<int>(id), filePath);
 }
 
-void HMAS::RegisterSound(HMAS_AudioId id, std::vector<char>& buffer) {
+void HMAS::RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size) {
     if (gRegistry.find(id) != gRegistry.end()) {
         SPDLOG_WARN("Sound with ID {} already registered", static_cast<int>(id));
         return;
     }
 
-    ma_decoder decoder;
-    ma_result result = ma_decoder_init_memory(buffer.data(), buffer.size(), NULL, &decoder);
+    ma_decoder_config config = ma_decoder_config_init(ma_format_f32, ma_engine_get_channels(&gAudioEngine), ma_engine_get_sample_rate(&gAudioEngine));
+    ma_result result = ma_decoder_init_memory(data, size, &config, &gRegistry[id].decoder);
     if (result != MA_SUCCESS) {
         SPDLOG_ERROR("Failed to initialize decoder from memory: {}", ma_result_description(result));
         return;
     }
 
-    result = ma_sound_init_from_data_source(&gAudioEngine, decoder.ds.pCurrent, 0, NULL, &gRegistry[id].sound);
-    ma_decoder_uninit(&decoder);
+    result = ma_sound_init_from_data_source(&gAudioEngine, &gRegistry[id].decoder, 0, NULL, &gRegistry[id].sound);
 
     if (result != MA_SUCCESS) {
         SPDLOG_ERROR("Failed to load sound from memory: {}", ma_result_description(result));

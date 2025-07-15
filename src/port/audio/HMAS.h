@@ -31,6 +31,7 @@ enum HMAS_EffectTransition {
 
 struct HMAS_Sample {
     ma_sound sound;
+    ma_decoder decoder;
 };
 
 struct HMAS_Effect {
@@ -56,7 +57,7 @@ public:
     ~HMAS();
 
     void RegisterSound(HMAS_AudioId id, const std::string& filePath);
-    void RegisterSound(HMAS_AudioId id, std::vector<char>& buffer);
+    void RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size);
 
     void Play(HMAS_ChannelId channel, HMAS_AudioId id, bool loop = false);
     void Stop(HMAS_ChannelId channel);
