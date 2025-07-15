@@ -1062,6 +1062,10 @@ void func_802903B0(void) {
     gIsInQuitToMenuTransition = 1;
     gQuitToMenuTransitionCounter = 5;
     gGotoMode = RACING;
+    // Stop when retrying
+    if(HMAS_IsPlaying(HMAS_MUSIC)) {
+        HMAS_Stop(HMAS_MUSIC);
+    }
 }
 
 void func_802903D8(Player* playerOne, Player* playerTwo) {
