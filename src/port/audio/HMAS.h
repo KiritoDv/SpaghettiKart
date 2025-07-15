@@ -1,12 +1,30 @@
 #pragma once
 
-enum HMAS_AudioId {
-    DEMO = 0
+typedef int HMAS_AudioId;
+
+enum HMAS_ChannelId {
+    HMAS_MUSIC,
+    HMAS_SFX,
+    HMAS_ENV,
+    HMAS_MAX_CHANNELS
+};
+
+enum HMAS_EffectType {
+    HMAS_EFFECT_VOLUME,
+    HMAS_EFFECT_PITCH,
+    HMAS_EFFECT_PAUSE,
+    HMAS_EFFECT_STOP
+};
+
+enum HMAS_EffectTransition {
+    HMAS_LINEAR,
+    HMAS_INSTANT
 };
 
 #ifdef __cplusplus
 
 #include <string>
+#include <vector>
 #include <cstdint>
 #include <unordered_map>
 #include "audio/miniaudio.h"
@@ -15,31 +33,61 @@ struct HMAS_Sample {
     ma_sound sound;
 };
 
+struct HMAS_Effect {
+    HMAS_EffectType type;
+    HMAS_EffectTransition transition;
+    uint32_t numFrames;
+    float target;
+};
+
+struct HMAS_ChannelInfo {
+    ma_sound* sound;
+
+    uint64_t cursor;
+    float pitch;
+    float volume;
+
+    std::vector<HMAS_Effect> effects;
+};
+
 class HMAS {
 public:
     HMAS();
     ~HMAS();
 
     void RegisterSound(HMAS_AudioId id, const std::string& filePath);
+    void RegisterSound(HMAS_AudioId id, std::vector<uint8_t>& buffer);
 
-    void Play(HMAS_AudioId id, float speed = 1.0f, bool loop = false);
-    void Stop();
-    bool IsPlaying();
+    void Play(HMAS_ChannelId channel, HMAS_AudioId id, bool loop = false);
+    void Stop(HMAS_ChannelId channel);
+    bool IsPlaying(HMAS_ChannelId channel);
 
+    void SetPitch(HMAS_ChannelId channel, float pitch);
+    void SetVolume(HMAS_ChannelId channel, float volume);
+    void SetPause(HMAS_ChannelId channel, bool pause);
+    void AddEffect(HMAS_ChannelId channel, HMAS_EffectType type, HMAS_EffectTransition transition, uint32_t frames, float target);
+
+    bool IsIDRegistered(HMAS_AudioId id);
+
+    void ProcessEffects();
     void CreateBuffer(uint8_t* samples, uint32_t num_samples);
 
 private:
     ma_engine gAudioEngine;
-    ma_sound* gCurrentSound;
+    HMAS_ChannelInfo gChannelSound[HMAS_MAX_CHANNELS] = { 0 };
     std::unordered_map<HMAS_AudioId, HMAS_Sample> gRegistry;
 };
 
 extern "C" {
 #endif
 
-void HMAS_Play(enum HMAS_AudioId id, float speed, bool loop);
-void HMAS_Stop();
-bool HMAS_IsPlaying();
+void HMAS_Play(enum HMAS_ChannelId channel, HMAS_AudioId id, bool loop);
+void HMAS_Stop(enum HMAS_ChannelId channel);
+bool HMAS_IsPlaying(enum HMAS_ChannelId channel);
+void HMAS_SetPitch(enum HMAS_ChannelId channel, float pitch);
+void HMAS_SetPause(enum HMAS_ChannelId channel, bool pause);
+void HMAS_AddEffect(enum HMAS_ChannelId channel, enum HMAS_EffectType type, enum HMAS_EffectTransition transition, uint32_t frames, float target);
+bool HMAS_IsIDRegistered(HMAS_AudioId id);
 
 #ifdef __cplusplus
 }

@@ -2888,8 +2888,11 @@ void play_sound2(s32 soundBits) {
 }
 
 void play_sequence(u16 arg0) {
-    if(arg0 > MUSIC_SEQ_MAX) {
-        HMAS_Play(arg0 - (MUSIC_SEQ_MAX + 1), 1.0f, true);
+
+    HMAS_Stop(HMAS_MUSIC); // Stop the current music sequence
+
+    if(HMAS_IsIDRegistered(arg0)) {
+        HMAS_Play(HMAS_MUSIC, arg0, true);
     } else {
         func_800C3448(arg0 | 0x10000);
         gCurrentMusicSeq = arg0;
@@ -3253,6 +3256,13 @@ void func_800CA0E4(void) {
 void func_800CA118(u8 arg0) {
     D_800EA0EC[arg0] = 1;
     D_800E9EA4[arg0] = 1;
+
+    // Audio: Stop the music when the race is over
+    if(HMAS_IsPlaying(HMAS_MUSIC)){
+        HMAS_AddEffect(HMAS_MUSIC, HMAS_EFFECT_VOLUME, HMAS_LINEAR, 10, 0);
+        HMAS_AddEffect(HMAS_MUSIC, HMAS_EFFECT_STOP,   HMAS_INSTANT, 1, 0);
+    }
+
     switch (D_800EA1C0) { /* irregular */
         case 0:
             D_800EA0F0 = 1;
@@ -3345,6 +3355,13 @@ void func_800CA49C(u8 arg0) {
             func_800C3448(0xC130017D);
         }
         D_8018FC08 = D_8018FC08 + 1;
+
+        // Audio: Speed up the music on the last lap
+        if(HMAS_IsPlaying(HMAS_MUSIC)){
+            HMAS_AddEffect(HMAS_MUSIC, HMAS_EFFECT_PITCH, HMAS_INSTANT, 1,   1.2f);
+            HMAS_AddEffect(HMAS_MUSIC, HMAS_EFFECT_PAUSE, HMAS_INSTANT, 110, 0.0f);
+            HMAS_AddEffect(HMAS_MUSIC, HMAS_EFFECT_PAUSE, HMAS_INSTANT, 1,   1.0f);
+        }
     }
 }
 
