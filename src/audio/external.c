@@ -15,6 +15,7 @@
 #include "menu_items.h"
 #include <stdbool.h>
 #include "port/Game.h"
+#include "port/audio/HMAS.h"
 
 s8 D_8018EF10;
 UnkStruct8018EF18 D_8018EF18[16];
@@ -2887,8 +2888,12 @@ void play_sound2(s32 soundBits) {
 }
 
 void play_sequence(u16 arg0) {
-    func_800C3448(arg0 | 0x10000);
-    gCurrentMusicSeq = arg0;
+    if(arg0 > MUSIC_SEQ_MAX) {
+        HMAS_Play(arg0 - (MUSIC_SEQ_MAX + 1), 1.0f, true);
+    } else {
+        func_800C3448(arg0 | 0x10000);
+        gCurrentMusicSeq = arg0;
+    }
 }
 
 void func_800C8EF8(u16 arg0) {
