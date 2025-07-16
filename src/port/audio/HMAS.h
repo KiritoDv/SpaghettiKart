@@ -34,11 +34,18 @@ struct HMAS_Loop {
     int64_t end;
 };
 
+struct HMAS_Info {
+    HMAS_Loop loop = { -1, -1 };
+    std::string name;
+    std::string author;
+    std::string date;
+};
+
 struct HMAS_Sample {
     ma_sound sound;
     ma_decoder decoder;
 
-    HMAS_Loop loop;
+    HMAS_Info info;
 };
 
 struct HMAS_Effect {
@@ -63,8 +70,8 @@ public:
     HMAS();
     ~HMAS();
 
-    void RegisterSound(HMAS_AudioId id, const std::string& filePath, HMAS_Loop loop = {-1, -1});
-    void RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size, HMAS_Loop loop = {-1, -1});
+    void RegisterSound(HMAS_AudioId id, const std::string& filePath, HMAS_Info info = {});
+    void RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size, HMAS_Info info = {});
 
     void Play(HMAS_ChannelId channel, HMAS_AudioId id, bool loop = false);
     void Stop(HMAS_ChannelId channel);

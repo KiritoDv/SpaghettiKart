@@ -43,14 +43,17 @@ SM64::AudioSequenceFactoryV0::ReadResource(std::shared_ptr<Ship::File> file,
             auto metadata = Ship::Context::GetInstance()->GetResourceManager()->LoadFileProcess(initData->Path + ".json");
             if (metadata != nullptr) {
                 auto json = nlohmann::json::parse(std::string(metadata->Buffer->begin(), metadata->Buffer->end()));
-                HMAS_Loop loop = { -1, -1 };
+                HMAS_Info info;
 
+                info.name = json.value("name", "");
+                info.author = json.value("author", "");
+                info.date = json.value("date", "");
                 if (json.contains("loop")) {
-                    loop.start = json["loop"].value("start", -1);
-                    loop.end = json["loop"].value("end", -1);
+                    info.loop.start = json["loop"].value("start", -1);
+                    info.loop.end = json["loop"].value("end", -1);
                 }
 
-                GameEngine::Instance->gHMAS->RegisterSound(id, data, size, loop);
+                GameEngine::Instance->gHMAS->RegisterSound(id, data, size, info);
             } else {
                 GameEngine::Instance->gHMAS->RegisterSound(id, data, size);
             }

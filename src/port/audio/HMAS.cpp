@@ -21,7 +21,7 @@ HMAS::HMAS() {
     }
 }
 
-void HMAS::RegisterSound(HMAS_AudioId id, const std::string& filePath, HMAS_Loop loop) {
+void HMAS::RegisterSound(HMAS_AudioId id, const std::string& filePath, HMAS_Info info) {
     if (gRegistry.find(id) != gRegistry.end()) {
         SPDLOG_WARN("Sound with ID {} already registered", static_cast<int>(id));
         return;
@@ -33,16 +33,16 @@ void HMAS::RegisterSound(HMAS_AudioId id, const std::string& filePath, HMAS_Loop
         return;
     }
 
-    if(loop.start != -1 && loop.end != -1) {
+    if(info.loop.start != -1 && info.loop.end != -1) {
         ma_data_source* source = ma_sound_get_data_source(&gRegistry[id].sound);
-        ma_data_source_set_loop_point_in_pcm_frames(source, loop.start, loop.end);
+        ma_data_source_set_loop_point_in_pcm_frames(source, info.loop.start, info.loop.end);
     }
 
-    gRegistry[id].loop = loop;
+    gRegistry[id].info = info;
     SPDLOG_INFO("Sound with ID {} registered from file {}", static_cast<int>(id), filePath);
 }
 
-void HMAS::RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size, HMAS_Loop loop) {
+void HMAS::RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size, HMAS_Info info) {
     if (gRegistry.find(id) != gRegistry.end()) {
         SPDLOG_WARN("Sound with ID {} already registered", static_cast<int>(id));
         return;
@@ -55,8 +55,8 @@ void HMAS::RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size, HMAS_Loo
         return;
     }
 
-    if(loop.start != -1 && loop.end != -1) {
-        ma_data_source_set_loop_point_in_pcm_frames(&gRegistry[id].decoder, loop.start, loop.end);
+    if(info.loop.start != -1 && info.loop.end != -1) {
+        ma_data_source_set_loop_point_in_pcm_frames(&gRegistry[id].decoder, info.loop.start, info.loop.end);
     }
 
     result = ma_sound_init_from_data_source(&gAudioEngine, &gRegistry[id].decoder, 0, NULL, &gRegistry[id].sound);
@@ -66,7 +66,7 @@ void HMAS::RegisterSound(HMAS_AudioId id, uint8_t* data, uint32_t size, HMAS_Loo
         return;
     }
 
-    gRegistry[id].loop = loop;
+    gRegistry[id].info = info;
 
     SPDLOG_INFO("Sound with ID {} registered from memory buffer", static_cast<int>(id));
 }
