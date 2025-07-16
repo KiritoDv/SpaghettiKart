@@ -3425,7 +3425,9 @@ void func_800CA730(u8 arg0) {
                             }
                         } else {
                             func_800C3448(0x110100FFU);
-                            play_sequence(gCurrentMusicSeq);
+                            if(!HMAS_IsPlaying(HMAS_MUSIC)){
+                                play_sequence(gCurrentMusicSeq);
+                            }
                         }
                     }
                     D_800EA164 = 0;
