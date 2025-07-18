@@ -87,6 +87,10 @@ public:
     void ProcessEffects();
     void CreateBuffer(uint8_t* samples, uint32_t num_samples);
 
+    float Lerp(float a, float b, float t) {
+        return a + (b - a) * t;
+    }
+
 private:
     ma_engine gAudioEngine;
     HMAS_ChannelInfo gChannelSound[HMAS_MAX_CHANNELS] = { 0 };

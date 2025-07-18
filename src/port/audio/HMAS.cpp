@@ -172,10 +172,6 @@ bool HMAS::IsIDRegistered(HMAS_AudioId id) {
     return gRegistry.find(id) != gRegistry.end();
 }
 
-float lerp(float a, float b, float t) {
-    return a + (b - a) * t;
-}
-
 void HMAS::ProcessEffects() {
     for (size_t i = 0; i < sizeof(gChannelSound) / sizeof(gChannelSound[0]); i++){
         auto& channel = gChannelSound[i];
@@ -194,13 +190,13 @@ void HMAS::ProcessEffects() {
             switch (effect.type) {
                 case HMAS_EffectType::HMAS_EFFECT_VOLUME: {
                     float volume = effect.transition == HMAS_EffectTransition::HMAS_LINEAR ?
-                    lerp(channel.volume, effect.target, 1.0f / effect.numFrames) : effect.target;
+                    Lerp(channel.volume, effect.target, 1.0f / effect.numFrames) : effect.target;
                     this->SetVolume((HMAS_ChannelId) i, std::max(0.0f, volume));
                     break;
                 }
                 case HMAS_EffectType::HMAS_EFFECT_PITCH: {
                     float pitch = effect.transition == HMAS_EffectTransition::HMAS_LINEAR ?
-                    lerp(channel.pitch, effect.target, 1.0f / effect.numFrames) : effect.target;
+                    Lerp(channel.pitch, effect.target, 1.0f / effect.numFrames) : effect.target;
                     this->SetPitch((HMAS_ChannelId) i, std::max(0.1f, pitch));
                     break;
                 }
