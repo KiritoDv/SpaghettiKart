@@ -83,6 +83,7 @@ void func_80280650(void);
 void set_initial_position(CeremonyActor*);
 CeremonyActor* find_available_entry(void);
 CeremonyActor* new_actor(ActorInitParams*);
+void clear_D_802874D8_actors(void);
 u16 random_u16_credits(void);
 f32 random_float_between_0_and_1(void);
 f32 random_who_knows(f32);
@@ -100,7 +101,6 @@ void func_80281530(void);
 void func_80281538(void);
 void func_80281540(void);
 void podium_ceremony_loop(void);
-void clear_podium_actors(void);
 
 extern struct_D_802874D8 D_802874D8;
 extern CeremonyActor* sPodiumActorList;
