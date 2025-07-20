@@ -42,6 +42,7 @@ void HMUI::draw(GfxList** out) {
 
     this->drawable->setBounds(Rect(0, 0, dimensions.width, dimensions.height));
     this->drawable->onDraw(context.get(), 0, 0);
+    this->context->build(out);
 }
 
 void HMUI::update(float delta){
