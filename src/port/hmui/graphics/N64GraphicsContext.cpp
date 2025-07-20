@@ -1,8 +1,20 @@
-#include "GraphicsContext.h"
+#include "N64GraphicsContext.h"
 
 #include <libultraship.h>
+
 static GfxList stack[1024];
 static GfxList* out = stack;
+
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+
+void N64GraphicsContext::init() {
+
+}
+
+void N64GraphicsContext::dispose() {
+
+}
 
 void N64GraphicsContext::drawLine(float x1, float y1, float x2, float y2) {
 #ifdef HMUI_DRAW_LINE_WITH_3D
@@ -42,7 +54,7 @@ void N64GraphicsContext::drawText(float x, float y, const char* text, const Colo
 
 void N64GraphicsContext::drawImage(const Rect& rect, const char* texture, const Color2D& color, float scale) {
     gDPSetPrimColor(out++, 0, 255, (u8)(color.r * 255), (u8)(color.g * 255), (u8)(color.b * 255), (u8)(color.a * 255));
-    gDPLoadTextureBlock(out++, texture, G_IM_FMT_RGBA, G_IM_SIZ_32b, rect.width, rect.height, 0, G_TX_NOMIRROR | G_TX_WRAP,
+    gDPLoadTextureBlock(out++, texture, G_IM_FMT_RGBA, G_IM_SIZ_32b, (s32)rect.width, (s32)rect.height, 0, G_TX_NOMIRROR | G_TX_WRAP,
                             G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
     gSPWideTextureRectangle(out++, (s32) (rect.x * 4.0f), (s32) (rect.y * 4.0f),
                             (s32) ((rect.x + rect.width * scale) * 4.0f), (s32) ((rect.y + rect.height * scale) * 4.0f),
@@ -54,12 +66,12 @@ void N64GraphicsContext::drawImageEx(const Rect& rect, const Rect& srcRect, cons
     gDPSetTile(out++, G_IM_FMT_RGBA, G_IM_SIZ_32b, 0, 0, G_TX_LOADTILE, 0, G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD);
     gDPTileSync(out++);
     gDPSetTile(out++, G_IM_FMT_RGBA, G_IM_SIZ_32b, 2, 0, G_TX_RENDERTILE, 0, G_TX_NOMIRROR, 3, G_TX_NOLOD, G_TX_NOMIRROR, 3, G_TX_NOLOD);
-    gDPSetTileSize(out++, G_TX_RENDERTILE, 0, 0, srcRect.width << G_TEXTURE_IMAGE_FRAC, srcRect.height << G_TEXTURE_IMAGE_FRAC);
+    gDPSetTileSize(out++, G_TX_RENDERTILE, 0, 0, (s32) srcRect.width << G_TEXTURE_IMAGE_FRAC, (s32)srcRect.height << G_TEXTURE_IMAGE_FRAC);
     gDPPipeSync(out++);
     gDPSetTextureImage(out++, G_IM_FMT_RGBA, G_IM_SIZ_32b, 1, texture);
     gDPLoadSync(out++);
     gDPLoadBlock(out++, G_TX_LOADTILE, 0, 0, rect.width * rect.height - 1, CALC_DXT(rect.width, G_IM_SIZ_32b_BYTES));
-    gSPWideTextureRectangle(out++, rect.x << 2, y << 2, (rect.x + rect.width) << 2, (rect.y + rect.height) << 2, G_TX_RENDERTILE, srcRect.x, srcRect.y, 4 << 10, 1 << 10);
+    gSPWideTextureRectangle(out++, (s32) rect.x << 2, (s32) rect.y << 2, (s32)(rect.x + rect.width) << 2, (s32)(rect.y + rect.height) << 2, G_TX_RENDERTILE, srcRect.x, srcRect.y, 4 << 10, 1 << 10);
 }
 
 void N64GraphicsContext::setScissor(const Rect& rect) {
@@ -77,6 +89,6 @@ void N64GraphicsContext::build(GfxList** gen) {
     gDPSetCycleType(out++, G_CYC_2CYCLE);
     gDPSetRenderMode(out++, G_RM_FOG_SHADE_A, G_RM_AA_ZB_OPA_SURF2);
     gDPSetCombineLERP(out++, PRIMITIVE, 0, SHADE, 0, 0, 0, 0, 0, COMBINED, 0, COMBINED_ALPHA, 0, 0, 0, 0, 0);
-    gSPDisplayList(((*gen)++), stack);
+    __gSPDisplayList(((*gen)++), stack);
     out = &stack[0];
 }

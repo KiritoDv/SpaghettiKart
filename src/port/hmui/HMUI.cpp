@@ -1,13 +1,17 @@
 #include "HMUI.h"
 
-void HMUI::initialize() {
-    context = std::make_unique<N64GraphicsContext>();
-    context->init();
+#include "port/Engine.h"
+#include "port/hmui/widgets/Drawable.h"
+#include "port/hmui/graphics/N64GraphicsContext.h"
+
+void HMUI::initialize(std::shared_ptr<GraphicsContext> ctx) {
+    this->context = ctx;
+    this->context->init();
 }
 
-void HMUI::show(std::shared_ptr<IView> view){
-    if (view) {
-        this->view = view;
+void HMUI::show(std::shared_ptr<IView> _view){
+    if (_view) {
+        this->view = _view;
         this->view->init();
         this->drawable = this->view->build();
 
@@ -33,6 +37,10 @@ void HMUI::draw(GfxList** out) {
         throw std::runtime_error("Drawable cannot be null");
     }
 
+    auto interpreter = GetInterpreter();
+    auto dimensions = interpreter->mCurDimensions;
+
+    this->drawable->setBounds(Rect(0, 0, dimensions.width, dimensions.height));
     this->drawable->onDraw(context.get(), 0, 0);
 }
 
@@ -60,8 +68,12 @@ void HMUI::close(){
     }
 
     this->drawable->dispose();
-
     this->view->dispose();
+
     this->drawable = nullptr;
     this->view = nullptr;
+}
+HMUI::~HMUI() {
+    this->context->dispose();
+    this->context = nullptr;
 }

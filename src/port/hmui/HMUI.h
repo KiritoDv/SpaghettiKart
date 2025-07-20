@@ -6,7 +6,8 @@
 
 class HMUI {
 public:
-    void initialize();
+    virtual ~HMUI();
+    void initialize(std::shared_ptr<GraphicsContext> ctx);
     void show(std::shared_ptr<IView> view);
     void close();
     bool isActive() const {
@@ -15,7 +16,7 @@ public:
 private:
     std::shared_ptr<IView> view;
     std::shared_ptr<Drawable> drawable;
-    std::unique_ptr<GraphicsContext> context;
+    std::shared_ptr<GraphicsContext> context;
 
     // Internal methods for rendering
     void draw(GfxList** out);

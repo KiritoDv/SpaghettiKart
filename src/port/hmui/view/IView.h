@@ -1,8 +1,8 @@
 #pragma once
 
-#include "port/hmui/graphics/GraphicsContext.h"
-#include "port/hmui/widgets/Drawable.h"
 #include <memory>
+
+class Drawable;
 
 class IView {
 public:
