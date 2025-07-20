@@ -1,5 +1,5 @@
 # Custom Audio
-To replace a sequences you should only create a zip file with textures to replace at the same path as mk64.o2r. Only wav, mp3, ogg and flac are supported.
+To replace a sequences you should only create a zip file with sequences to replace at the same path as mk64.o2r. Only wav, mp3, ogg and flac are supported.
 ## Example:
 You want to change sound/sequences/main_menu then you just need to create a zip file with the following structure:
 ```
