@@ -55,14 +55,13 @@ void HMUI::close(){
         return;
     }
 
-    std::shared_ptr<Drawable> drawable = this->view->build();
-
-    if(drawable == nullptr) {
+    if(this->drawable == nullptr) {
         throw std::runtime_error("Drawable cannot be null");
     }
 
-    drawable->dispose();
+    this->drawable->dispose();
 
     this->view->dispose();
+    this->drawable = nullptr;
     this->view = nullptr;
 }
