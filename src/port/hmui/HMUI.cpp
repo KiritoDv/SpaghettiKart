@@ -1,0 +1,73 @@
+#include "HMUI.h"
+
+void HMUI::initialize() {
+    context = std::make_unique<N64GraphicsContext>();
+    context->init();
+}
+
+void HMUI::show(std::shared_ptr<IView> view){
+    if (view) {
+        this->view = view;
+        this->view->init();
+
+        std::shared_ptr<Drawable> drawable = this->view->build();
+
+        if(drawable == nullptr) {
+            throw std::runtime_error("Drawable cannot be null");
+        }
+
+        drawable->setView(view);
+        drawable->init();
+    } else {
+        throw std::invalid_argument("View cannot be null");
+    }
+}
+
+void HMUI::draw(GfxList** out) {
+    std::shared_ptr<IView> current = this->view;
+
+    if (current == nullptr) {
+        return;
+    }
+
+    std::shared_ptr<Drawable> drawable = current->build();
+
+    if(drawable == nullptr) {
+        throw std::runtime_error("Drawable cannot be null");
+    }
+
+    drawable->onDraw(context.get(), 0, 0);
+}
+
+void HMUI::update(float delta){
+    std::shared_ptr<IView> current = this->view;
+
+    if (current == nullptr) {
+        return;
+    }
+
+    std::shared_ptr<Drawable> drawable = current->build();
+
+    if(drawable == nullptr) {
+        throw std::runtime_error("Drawable cannot be null");
+    }
+
+    drawable->onUpdate(delta);
+}
+
+void HMUI::close(){
+    if (!this->view) {
+        return;
+    }
+
+    std::shared_ptr<Drawable> drawable = this->view->build();
+
+    if(drawable == nullptr) {
+        throw std::runtime_error("Drawable cannot be null");
+    }
+
+    drawable->dispose();
+
+    this->view->dispose();
+    this->view = nullptr;
+}
