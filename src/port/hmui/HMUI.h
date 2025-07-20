@@ -13,12 +13,10 @@ public:
     bool isActive() const {
         return view != nullptr;
     }
+    void draw(GfxList** out);
+    void update(float delta);
 private:
     std::shared_ptr<IView> view;
     std::shared_ptr<Drawable> drawable;
     std::shared_ptr<GraphicsContext> context;
-
-    // Internal methods for rendering
-    void draw(GfxList** out);
-    void update(float delta);
 };

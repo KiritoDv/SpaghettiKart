@@ -38,6 +38,9 @@
 #include <port/switch/SwitchImpl.h>
 #endif
 
+#include "hmui/HMUI.h"
+#include "port/hmui/graphics/N64GraphicsContext.h"
+
 extern "C" {
 bool prevAltAssets = false;
 float gInterpolationStep = 0.0f;
@@ -61,6 +64,7 @@ Fast::Interpreter* GetInterpreter() {
 }
 
 GameEngine* GameEngine::Instance;
+HMUI* gHMUI = nullptr;
 
 bool CreateDirectoryRecursive(std::string const& dirName, std::error_code& err) {
     err.clear();
@@ -365,6 +369,8 @@ void GameEngine::Create() {
 #if defined(__SWITCH__) || defined(__WIIU__)
     CVarRegisterInteger("gControlNav", 1); // always enable controller nav on switch/wii u
 #endif
+    gHMUI = new HMUI();
+    gHMUI->initialize(std::make_shared<N64GraphicsContext>());
 }
 
 void GameEngine::Destroy() {
@@ -387,8 +393,13 @@ void GameEngine::StartFrame() const {
     switch (dwScancode) {
         case KbScancode::LUS_KB_TAB: {
             // Toggle HD Assets
-            CVarSetInteger("gAltAssets", !CVarGetInteger("gAltAssets", 0));
-            ShouldClearTextureCacheAtEndOfFrame = true;
+            // CVarSetInteger("gAltAssets", !CVarGetInteger("gAltAssets", 0));
+            // ShouldClearTextureCacheAtEndOfFrame = true;
+            if(gHMUI->isActive()) {
+                gHMUI->close();
+            } else {
+                // gHMUI->show(std::make_shared<Ship::ImguiUI>());
+            }
             break;
         }
         default:
@@ -454,7 +465,9 @@ void GameEngine::ProcessGfxCommands(Gfx* commands) {
     while (time + original_fps <= next_original_frame) {
         time += original_fps;
         if (time != next_original_frame) {
-            mtx_replacements.push_back(FrameInterpolation_Interpolate((float) time / next_original_frame));
+            float delta = (float) time / next_original_frame;
+            mtx_replacements.push_back(FrameInterpolation_Interpolate(delta));
+            gHMUI->update(delta);
         } else {
             mtx_replacements.emplace_back();
         }
@@ -829,4 +842,8 @@ extern "C" uint32_t OTRGetGameViewportWidth() {
 
 extern "C" uint32_t OTRGetGameViewportHeight() {
     return GetInterpreter()->mGameWindowViewport.height;
+}
+
+extern "C" void RenderHMUI(Gfx** gfx) {
+    gHMUI->draw(reinterpret_cast<GfxList**>(gfx));
 }
