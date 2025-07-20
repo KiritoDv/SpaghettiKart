@@ -20,12 +20,15 @@ public:
     virtual void setParent(Drawable* parent) {
         this->parent = parent;
     }
+
     virtual Drawable* getParent() const {
         return parent;
     }
+
     virtual void setView(std::shared_ptr<IView> view) {
         this->view = view;
     }
+
     virtual std::shared_ptr<IView> getView() const {
         return view;
     }
@@ -34,3 +37,5 @@ protected:
     std::shared_ptr<IView> view;
 };
 
+// Suggestion: Make defines for instanciating Drawable
+// #define COLUMN(...) std::make_shared<Column>(__VA_ARGS__)

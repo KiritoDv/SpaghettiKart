@@ -9,8 +9,7 @@ void HMUI::show(std::shared_ptr<IView> view){
     if (view) {
         this->view = view;
         this->view->init();
-
-        std::shared_ptr<Drawable> drawable = this->view->build();
+        this->drawable = this->view->build();
 
         if(drawable == nullptr) {
             throw std::runtime_error("Drawable cannot be null");
@@ -30,13 +29,11 @@ void HMUI::draw(GfxList** out) {
         return;
     }
 
-    std::shared_ptr<Drawable> drawable = current->build();
-
-    if(drawable == nullptr) {
+    if(this->drawable == nullptr) {
         throw std::runtime_error("Drawable cannot be null");
     }
 
-    drawable->onDraw(context.get(), 0, 0);
+    this->drawable->onDraw(context.get(), 0, 0);
 }
 
 void HMUI::update(float delta){
@@ -46,13 +43,11 @@ void HMUI::update(float delta){
         return;
     }
 
-    std::shared_ptr<Drawable> drawable = current->build();
-
-    if(drawable == nullptr) {
+    if(this->drawable == nullptr) {
         throw std::runtime_error("Drawable cannot be null");
     }
 
-    drawable->onUpdate(delta);
+    this->drawable->onUpdate(delta);
 }
 
 void HMUI::close(){

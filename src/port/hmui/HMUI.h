@@ -14,6 +14,7 @@ public:
     }
 private:
     std::shared_ptr<IView> view;
+    std::shared_ptr<Drawable> drawable;
     std::unique_ptr<GraphicsContext> context;
 
     // Internal methods for rendering
