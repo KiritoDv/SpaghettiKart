@@ -81,7 +81,7 @@ include(cmake/automate-vcpkg.cmake)
 set(VCPKG_TRIPLET x64-windows-static)
 set(VCPKG_TARGET_TRIPLET x64-windows-static)
 vcpkg_bootstrap()
-vcpkg_install_packages(zlib bzip2 libzip libpng sdl2 sdl2-net glew glfw3 nlohmann-json tinyxml2 spdlog libogg libvorbis)
+vcpkg_install_packages(zlib bzip2 libzip libpng sdl2 sdl2-net glew glfw3 nlohmann-json tinyxml2 spdlog libogg libvorbis cpr)
 
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -354,6 +354,15 @@ FetchContent_MakeAvailable(dr_libs)
 #=================== STB ===================
 include_directories(${STB_DIR})
 
+if(NOT WIN32)
+    set(CPR_USE_SYSTEM_CURL TRUE)
+    FetchContent_Declare(
+        cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
+        GIT_TAG e10e86f4327aff234b0dda73622557d19ff281c6
+    )
+    FetchContent_MakeAvailable(cpr)
+endif()
+
 #==============================================================================#
 # Libultraship Integration                                                     #
 #==============================================================================#
@@ -465,15 +474,18 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
         "Vorbis::vorbis"
         "Vorbis::vorbisenc"
         "Vorbis::vorbisfile"
+        "cpr::cpr"
     )
 elseif(CMAKE_SYSTEM_NAME STREQUAL "NintendoSwitch")
     set(ADDITIONAL_LIBRARY_DEPENDENCIES
         -lglad
         SDL2::SDL2
+        cpr::cpr
     )
 elseif(CMAKE_SYSTEM_NAME STREQUAL "CafeOS")
     set(ADDITIONAL_LIBRARY_DEPENDENCIES
         "$<$<CONFIG:Debug>:-Wl,--wrap=abort>"
+        cpr::cpr
     )
     target_include_directories(${PROJECT_NAME} PRIVATE
         ${DEVKITPRO}/portlibs/wiiu/include/
@@ -486,6 +498,7 @@ else()
         "Vorbis::vorbis"
         "Vorbis::vorbisenc"
         "Vorbis::vorbisfile"
+        "cpr::cpr"
 	)
 endif()
 

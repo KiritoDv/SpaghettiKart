@@ -26,8 +26,8 @@ struct_8018EE10_entry D_8018EE10[2];
 /*** data ***/
 u16 gCompanyCode = PFS_COMPANY_CODE('0', '1');
 u32 gGameCode = PFS_GAME_CODE('N', 'K', 'T', 'J');
-s8 gControllerPak1State = BAD;
-s8 sControllerPak2State = BAD;
+s8 gControllerPak1State = PAK_BAD;
+s8 sControllerPak2State = PAK_BAD;
 
 /*** rodata ***/
 // default time trial records in little endian form
@@ -585,10 +585,10 @@ s32 controller_pak_1_status(void) {
             case PFS_ERR_INVALID:
                 break;
             case PFS_ERR_NEW_PACK:
-                gControllerPak1State = BAD;
+                gControllerPak1State = PAK_BAD;
                 break;
             default:
-                gControllerPak1State = BAD;
+                gControllerPak1State = PAK_BAD;
                 break;
         }
     }
@@ -613,7 +613,7 @@ s32 controller_pak_1_status(void) {
             }
         }
 
-        gControllerPak1State = OK;
+        gControllerPak1State = PAK_OK;
         if (osPfsFindFile(&gControllerPak1FileHandle, gCompanyCode, gGameCode, (u8*) gGameName, (u8*) gExtCode,
                           &gControllerPak1FileNote) == PFS_NO_ERROR) {
             return PFS_NO_ERROR;
@@ -650,8 +650,8 @@ s32 controller_pak_2_status(void) {
                 return PFS_INVALID_DATA;
             default:
             case PFS_ERR_NEW_PACK:
-                sControllerPak2State = BAD;
-                stateBorrow = BAD;
+                sControllerPak2State = PAK_BAD;
+                stateBorrow = PAK_BAD;
         }
     }
     if (!stateBorrow) {
@@ -674,7 +674,7 @@ s32 controller_pak_2_status(void) {
             }
         }
 
-        sControllerPak2State = OK;
+        sControllerPak2State = PAK_OK;
 
         switch (osPfsFindFile(&gControllerPak2FileHandle, gCompanyCode, gGameCode, (u8*) gGameName, (u8*) gExtCode,
                               &gControllerPak2FileNote)) {
@@ -699,16 +699,16 @@ s32 func_800B5F30(void) {
         errorCode = osPfsInit(&gSIEventMesgQueue, &gControllerPak1FileHandle, CONTROLLER_1);
         if (osPfsNumFiles(&gControllerPak1FileHandle, &gControllerPak1NumFilesUsed,
                           &gControllerPak1MaxWriteableFiles) != PFS_NO_ERROR) {
-            gControllerPak1State = BAD;
+            gControllerPak1State = PAK_BAD;
             return PFS_NUM_FILES_ERROR;
         }
         if (osPfsFreeBlocks(&gControllerPak1FileHandle, &gControllerPak1NumPagesFree) != PFS_NO_ERROR) {
-            gControllerPak1State = BAD;
+            gControllerPak1State = PAK_BAD;
             return PFS_FREE_BLOCKS_ERROR;
         }
         gControllerPak1NumPagesFree = gControllerPak1NumPagesFree >> 8;
         if (errorCode == PFS_NO_ERROR) {
-            gControllerPak1State = OK;
+            gControllerPak1State = PAK_OK;
         }
         return errorCode;
     }
@@ -724,7 +724,7 @@ s32 func_800B6014(void) {
     if (check_for_controller_pak(CONTROLLER_2) != NO_PAK) {
         errorCode = osPfsInit(&gSIEventMesgQueue, &gControllerPak2FileHandle, CONTROLLER_2);
         if (errorCode == PFS_NO_ERROR) {
-            sControllerPak2State = OK;
+            sControllerPak2State = PAK_OK;
         }
         return errorCode;
     }

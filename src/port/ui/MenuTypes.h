@@ -42,6 +42,7 @@ typedef enum {
     WIDGET_COLOR_24, // color picker without alpha
     WIDGET_COLOR_32, // color picker with alpha
     WIDGET_SEARCH,
+    WIDGET_INPUT_TEXT, // text input field
     WIDGET_SEPARATOR,
     WIDGET_SEPARATOR_TEXT,
     WIDGET_TEXT,
@@ -78,7 +79,7 @@ typedef enum {
 using CVarVariant = std::variant<int32_t, const char*, float, Color_RGBA8, Color_RGB8>;
 using OptionsVariant =
     std::variant<UIWidgets::ButtonOptions, UIWidgets::CheckboxOptions, UIWidgets::ComboboxOptions,
-                 UIWidgets::FloatSliderOptions, UIWidgets::IntSliderOptions, UIWidgets::WidgetOptions>;
+                 UIWidgets::FloatSliderOptions, UIWidgets::IntSliderOptions, UIWidgets::InputTextOptions, UIWidgets::WidgetOptions>;
 
 // All the info needed for display and search of all widgets in the menu.
 // `name` is the label displayed,
@@ -144,6 +145,9 @@ struct WidgetInfo {
             case WIDGET_BUTTON:
             case WIDGET_WINDOW_BUTTON:
                 options = std::make_shared<UIWidgets::ButtonOptions>(std::get<UIWidgets::ButtonOptions>(options_));
+                break;
+            case WIDGET_INPUT_TEXT:
+                options = std::make_shared<UIWidgets::InputTextOptions>(std::get<UIWidgets::InputTextOptions>(options_));
                 break;
             case WIDGET_CUSTOM:
             case WIDGET_TEXT:

@@ -1483,7 +1483,7 @@ void func_80091EE4(void) {
     s32 temp_s2;
     s32 tmp;
 
-    gControllerPak1State = BAD;
+    gControllerPak1State = PAK_BAD;
     tmp = func_800B5F30();
 
     if ((gGhostPlayerInit != 0) && (tmp == 0)) {
@@ -10429,7 +10429,7 @@ void func_800AA2EC(MenuItem* arg0) {
                 break;
             }
 
-            if (gControllerPak1State != BAD) {
+            if (gControllerPak1State != PAK_BAD) {
                 var_t1 = 0;
                 switch (osPfsFindFile(&gControllerPak1FileHandle, gCompanyCode, gGameCode, (u8*) gGameName,
                                       (u8*) gExtCode, &gControllerPak1FileNote)) {
@@ -10440,15 +10440,15 @@ void func_800AA2EC(MenuItem* arg0) {
                         var_t1 = 1;
                         break;
                     case 2:
-                        gControllerPak1State = BAD;
+                        gControllerPak1State = PAK_BAD;
                         break;
                     default:
-                        gControllerPak1State = BAD;
+                        gControllerPak1State = PAK_BAD;
                         break;
                 }
             }
             if (var_t1 == 0) {
-                if (gControllerPak1State == BAD) {
+                if (gControllerPak1State == PAK_BAD) {
                     if (check_for_controller_pak(0) == 0) {
                         arg0->state = 2;
                         break;
@@ -10470,7 +10470,7 @@ void func_800AA2EC(MenuItem* arg0) {
                         }
                         return;
                     } else {
-                        gControllerPak1State = OK;
+                        gControllerPak1State = PAK_OK;
                     }
                     if (osPfsFindFile(&gControllerPak1FileHandle, gCompanyCode, gGameCode, (u8*) gGameName,
                                       (u8*) gExtCode, &gControllerPak1FileNote) == 0) {

@@ -25,6 +25,7 @@
 #include "window/gui/resource/Font.h"
 #include "window/gui/resource/FontFactory.h"
 #include "SpaghettiGui.h"
+#include "port/satella/SatellaApi.h"
 
 #include "port/interpolation/FrameInterpolation.h"
 #include <graphic/Fast3D/Fast3dWindow.h>
@@ -362,6 +363,8 @@ void GameEngine::Create() {
     const auto instance = Instance = new GameEngine();
     instance->gHMAS = new HMAS();
     instance->AudioInit();
+    instance->gSatellaApi = new SatellaApi();
+    instance->gSatellaApi->LoadSession();
     GameUI::SetupGuiElements();
 #if defined(__SWITCH__) || defined(__WIIU__)
     CVarRegisterInteger("gControlNav", 1); // always enable controller nav on switch/wii u

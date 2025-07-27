@@ -4,8 +4,8 @@
 /**
  * @brief Options for Controller Pak state
  */
-#define OK 1
-#define BAD 0
+#define PAK_OK 1
+#define PAK_BAD 0
 
 /**
  * @brief Enable debug mode

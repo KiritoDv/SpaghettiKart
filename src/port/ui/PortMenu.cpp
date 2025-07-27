@@ -9,6 +9,7 @@
 #include <variant>
 #include <tuple>
 #include "ResolutionEditor.h"
+#include "Net64Menu.h"
 
 #include "courses/Course.h"
 #include "courses/KalimariDesert.h"
@@ -27,6 +28,7 @@ extern s32 gMenuSelection;
 
 namespace GameUI {
 extern std::shared_ptr<PortMenu> mPortMenu;
+std::shared_ptr<Net64Menu> mNet64Menu;
 
 using namespace UIWidgets;
 
@@ -35,6 +37,17 @@ void PortMenu::AddSidebarEntry(std::string sectionName, std::string sidebarName,
     assert(!sidebarName.empty());
     menuEntries.at(sectionName).sidebars.emplace(sidebarName, SidebarEntry{ .columnCount = columnCount });
     menuEntries.at(sectionName).sidebarOrder.push_back(sidebarName);
+}
+
+void PortMenu::RemoveSidebarEntry(std::string sectionName, std::string sidebarName) {
+    assert(!sectionName.empty());
+    assert(!sidebarName.empty());
+    auto& sidebars = menuEntries.at(sectionName).sidebars;
+    if (sidebars.contains(sidebarName)) {
+        sidebars.erase(sidebarName);
+        auto& sidebarOrder = menuEntries.at(sectionName).sidebarOrder;
+        sidebarOrder.erase(std::remove(sidebarOrder.begin(), sidebarOrder.end(), sidebarName), sidebarOrder.end());
+    }
 }
 
 WidgetInfo& PortMenu::AddWidget(WidgetPath& pathInfo, std::string widgetName, WidgetType widgetType) {
@@ -78,6 +91,9 @@ WidgetInfo& PortMenu::AddWidget(WidgetPath& pathInfo, std::string widgetName, Wi
             break;
         case WIDGET_COLOR_24:
         case WIDGET_COLOR_32:
+            break;
+        case WIDGET_INPUT_TEXT:
+            widget.options = std::make_shared<InputTextOptions>();
             break;
         case WIDGET_SEARCH:
         case WIDGET_SEPARATOR:
@@ -555,6 +571,7 @@ void PortMenu::AddDevTools() {
 
 PortMenu::PortMenu(const std::string& consoleVariable, const std::string& name)
     : Menu(consoleVariable, name, 0, UIWidgets::Colors::LightBlue) {
+    mNet64Menu = std::make_shared<Net64Menu>();
 }
 
 // bool CheckNetworkConnected(disabledInfo& info) {
@@ -566,6 +583,7 @@ void PortMenu::InitElement() {
     AddSettings();
     AddEnhancements();
     AddDevTools();
+    mNet64Menu->AddTabs(this);
 
     if (CVarGetInteger("gSettings.Menu.SidebarSearch", 0)) {
         InsertSidebarSearch();

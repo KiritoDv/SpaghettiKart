@@ -425,6 +425,15 @@ void Menu::MenuDrawItem(WidgetInfo& widget, uint32_t width, UIWidgets::Colors me
                     window->DrawElement();
                 }
             } break;
+            case WIDGET_INPUT_TEXT: {
+                auto options = std::static_pointer_cast<UIWidgets::InputTextOptions>(widget.options);
+                options->color = menuThemeIndex;
+                if(ImGui::InputTextWithHint(widget.name.c_str(), options->hintText.c_str(), (char*)options->inputText, options->inputLength, options->flags)) {
+                    if (widget.callback != nullptr) {
+                        widget.callback(widget);
+                    }
+                }
+            } break;
             case WIDGET_SEARCH: {
                 UIWidgets::PushStyleButton(menuThemeIndex);
                 if (ImGui::Button("Clear")) {
@@ -448,7 +457,7 @@ void Menu::MenuDrawItem(WidgetInfo& widget, uint32_t width, UIWidgets::Colors me
                     ImGui::Text("Start typing to see results.");
                     return;
                 }
-                DrawSearchResults(menuSearchText);
+                 (menuSearchText);
                 ImGui::EndChild();
             } break;
             default:

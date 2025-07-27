@@ -142,6 +142,26 @@ namespace UIWidgets {
         }
     };
 
+    struct InputTextOptions : WidgetOptions {
+        std::string hintText = "";
+        const char* inputText = nullptr;
+        size_t inputLength = 0;
+        ImGuiInputTextFlags flags = 0;
+        Colors color = Colors::Gray;
+        
+        InputTextOptions(const char* inputText_ = nullptr, size_t inputLength_ = 0, ImGuiInputTextFlags flags_ = 0, std::string hintText_ = "")
+            : inputText(inputText_), inputLength(inputLength_), flags(flags_), hintText(hintText_) {}
+
+        InputTextOptions& Flags(ImGuiInputTextFlags flags_) {
+            flags = flags_;
+            return *this;
+        }
+        InputTextOptions& Color(Colors color_) {
+            WidgetOptions::color = color = color_;
+            return *this;
+        }
+    };
+
     struct CheckboxOptions : WidgetOptions {
         bool defaultValue = false; // Only applicable to CVarCheckbox
         ComponentAlignment alignment = ComponentAlignment::Left;

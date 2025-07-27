@@ -7,12 +7,13 @@
   : (GameEngine_OTRSigCheck((const char*) path) ? ResourceGetDataByName((const char*) path) : path))
   #define LOAD_ASSET_RAW(path) ResourceGetDataByName((const char*) path)
   
-  #ifdef __cplusplus
-  #include <vector>
-  #include <SDL2/SDL.h>
+#ifdef __cplusplus
+#include <vector>
+#include <SDL2/SDL.h>
 #include <graphic/Fast3D/Fast3dWindow.h>
 #include <graphic/Fast3D/interpreter.h>
 #include "libultraship/src/Context.h"
+#include "port/satella/SatellaApi.h"
 
 #ifndef IDYES
 #define IDYES 6
@@ -51,6 +52,7 @@ class GameEngine {
     ImFont* fontMonoLargest;
 
     HMAS* gHMAS;
+    SatellaApi* gSatellaApi;
 
     std::unordered_map<std::string, uint8_t> bankMapTable;
     GameEngine();

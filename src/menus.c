@@ -891,7 +891,7 @@ void controller_pak_menu_act(struct Controller* controller, UNUSED u16 controlle
                 if ((btnAndStick & (A_BUTTON | START_BUTTON)) != 0) {
                     play_sound2(SOUND_MENU_SELECT);
                     func_8009E1C0();
-                    gControllerPak1State = BAD;
+                    gControllerPak1State = PAK_BAD;
                     return;
                 }
                 if ((btnAndStick & (L_JPAD | R_JPAD)) != 0) {
