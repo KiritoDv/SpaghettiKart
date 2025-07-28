@@ -583,7 +583,7 @@ void PortMenu::InitElement() {
     AddSettings();
     AddEnhancements();
     AddDevTools();
-    mNet64Menu->AddTabs(this);
+    mNet64Menu->AddTabs();
 
     if (CVarGetInteger("gSettings.Menu.SidebarSearch", 0)) {
         InsertSidebarSearch();

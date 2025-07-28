@@ -25,7 +25,7 @@ public:
 
     void GetFriends(DefaultCallback callback);
     void SearchFriends(const std::string& query, Callback<std::vector<User>> callback);
-    void AddFriend(const std::string& friendId, DefaultCallback callback);
+    void AddFriend(User& user, DefaultCallback callback);
     void RemoveFriend(const std::string& friendId, DefaultCallback callback);
     void ModifyFriendRequest(const std::string& friendId, bool accept, DefaultCallback callback);
 

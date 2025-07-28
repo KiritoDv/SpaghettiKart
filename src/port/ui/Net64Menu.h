@@ -13,10 +13,10 @@ class PortMenu;
 
 class Net64Menu {
 public:
-    void AddTabs(PortMenu* menu);
-    void AddAuthTabs(PortMenu* menu);
+    void AddTabs();
+    void AddAuthTabs();
 
 private:
-    void AddRegisterTab(PortMenu* menu);
+    void AddRegisterTab();
 };
 }

@@ -25,9 +25,11 @@ void from_json(const json& j, User& user) {
     } else {
         user.favoriteGames.clear();
     }
-    if(j.contains("pending")) {
-        user.pending = j.at("pending").get<bool>();
+    if(j.contains("status")) {
+        auto status = j.at("status").get<std::string>();
+        user.status = status == "SENT" ? FriendRequestStatus::SENT :
+                   status == "RECEIVED" ? FriendRequestStatus::RECEIVED : FriendRequestStatus::ACCEPTED;
     } else {
-        user.pending = false;
+        user.status = FriendRequestStatus::SENT;
     }
 }

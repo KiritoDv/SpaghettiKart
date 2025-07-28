@@ -25,6 +25,12 @@ enum class ResponseCodes {
     SERVICE_UNAVAILABLE = 503,
 };
 
+enum class FriendRequestStatus {
+    SENT,
+    RECEIVED,
+    ACCEPTED,
+};
+
 struct AuthSession {
     std::string token;
     std::string refreshToken;
@@ -36,12 +42,9 @@ struct User {
     std::string username;
     std::string alias;
     std::string avatar;
-    std::string accentColor;
+    int32_t accentColor;
     std::vector<std::string> favoriteGames;
-
-    bool pending = false; // Used for friend requests
-
-    std::vector<uint8_t> loadedAvatar; // Used for caching avatar data
+    FriendRequestStatus status;
 };
 
 struct SatellaResponse {
