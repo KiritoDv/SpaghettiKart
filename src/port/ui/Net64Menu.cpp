@@ -4,13 +4,16 @@
 #include "ImguiUI.h"
 
 #include "port/Engine.h"
+#include "port/satella/SatellaCache.h"
 
 using namespace GameUI;
 using namespace UIWidgets;
 
-static char mCodeBuf[7] = { 0 };
-static char mSearchBuf[64] = { 0 };
+static char mCodeBuf[6 + 1] = { 0 };
+static char mPakName[16 + 1] = { 0 };
+static char mSearchBuf[64 + 1] = { 0 };
 static std::vector<User> mSearchResults;
+static ControllerPak* mSelectedPak;
 static SatellaApi* api;
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -96,7 +99,7 @@ void DrawFriendCard(User& user, FriendCardType type) {
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 8);
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
         if (ImGui::Button("Add")) {
-            GameEngine::Instance->gSatellaApi->AddFriend(user, [user](const SatellaResponse& response) {
+            api->AddFriend(user, [user](const SatellaResponse& response) {
                 if (response.isValid) {
                     GameEngine::Instance->context->GetLogger()->info("Friend request sent to {}", user.username);
                     mSearchResults.clear();
@@ -136,7 +139,7 @@ void DrawFriendCard(User& user, FriendCardType type) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
                 if (ImGui::Button("Remove")) {
                     GameEngine::Instance->context->GetLogger()->info("Removing friend {}", user.username);
-                    GameEngine::Instance->gSatellaApi->RemoveFriend(user.ulid, [user](const SatellaResponse& response) {
+                    api->RemoveFriend(user.ulid, [user](const SatellaResponse& response) {
                         if (response.isValid) {
                             GameEngine::Instance->context->GetLogger()->info("Removed friend {}", user.username);
                         } else {
@@ -150,7 +153,7 @@ void DrawFriendCard(User& user, FriendCardType type) {
             case FriendRequestStatus::SENT: {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
                 if (ImGui::Button("Cancel")) {
-                    GameEngine::Instance->gSatellaApi->ModifyFriendRequest(user.ulid, false, [user](const SatellaResponse& response) {
+                    api->ModifyFriendRequest(user.ulid, false, [user](const SatellaResponse& response) {
                         if (response.isValid) {
                             GameEngine::Instance->context->GetLogger()->info("Cancelled friend request to {}", user.username);
                         } else {
@@ -164,7 +167,7 @@ void DrawFriendCard(User& user, FriendCardType type) {
             case FriendRequestStatus::RECEIVED: {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.8f, 0.2f, 1.0f));
                 if (ImGui::Button("Accept")) {
-                    GameEngine::Instance->gSatellaApi->ModifyFriendRequest(
+                    api->ModifyFriendRequest(
                         user.ulid, true, [user](const SatellaResponse& response) {
                             if (response.isValid) {
                                 GameEngine::Instance->context->GetLogger()->info("Accepted friend request from {}",
@@ -179,7 +182,7 @@ void DrawFriendCard(User& user, FriendCardType type) {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 8);
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
                 if (ImGui::Button("Decline")) {
-                    GameEngine::Instance->gSatellaApi->ModifyFriendRequest(
+                    api->ModifyFriendRequest(
                         user.ulid, false, [user](const SatellaResponse& response) {
                             if (response.isValid) {
                                 GameEngine::Instance->context->GetLogger()->info("Declined friend request from {}",
@@ -198,6 +201,233 @@ void DrawFriendCard(User& user, FriendCardType type) {
 
     ImGui::EndGroup();
     ImGui::PopID();
+}
+
+void DrawControllerPakCard(ControllerPak& pak) {
+    auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
+    ImVec2 imageSize(128, 97);
+    const char* name = pak.name.c_str();
+    float textWidth = ImGui::CalcTextSize(name).x;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    auto user = api->GetUser();
+    auto current = api->GetCurrentPak();
+    bool isInserted = current && current->header.pakId == pak.pakId;
+    bool isGuest = pak.ownerId != user->ulid;
+
+    ImVec2 pakSize = ImVec2(imageSize.x, imageSize.y); // Card size with padding
+    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+
+    auto image = isGuest ?
+        isInserted ? "satella/ControllerPak-Inserted-Guest.png" : "satella/ControllerPak-Exists-Guest.png" :
+        isInserted ? "satella/ControllerPak-Inserted.png" : "satella/ControllerPak-Exists.png";
+    SatellaCache::LoadPNG(image);
+
+    // Start inner group
+    ImGui::BeginGroup();
+    ImGui::SetCursorScreenPos(cursorPos);
+    ImGui::Dummy(imageSize);
+    ImGui::SetCursorScreenPos(cursorPos);
+
+#ifdef DEBUG_WIDGET
+    ImVec2 pmax = ImGui::GetItemRectMax();
+#endif
+
+    // Centered image
+    ImGui::Image((ImTextureID) gui->GetTextureByName(image), imageSize);
+    ImGui::SetCursorScreenPos(cursorPos);
+
+    if(!isInserted) {
+        // Space and centered text
+        ImGui::SetCursorPosX((ImGui::GetCursorPosX() + (pakSize.x / 2)) - (textWidth / 2.0f));
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10);
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 0, 255));
+        // ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 70);
+        ImGui::Text("%s", name);
+        // ImGui::PopTextWrapPos();
+        ImGui::PopStyleColor();
+    }
+#ifdef DEBUG_WIDGET
+    draw_list->AddRect(cursorPos, pmax, IM_COL32(255, 0, 0, 255));
+#endif
+
+    ImGui::SetCursorScreenPos(cursorPos);
+    if(ImGui::IsMouseHoveringRect(cursorPos, ImVec2(cursorPos.x + pakSize.x, cursorPos.y + pakSize.y))) {
+        draw_list->AddRectFilled(
+            cursorPos,
+            ImVec2(cursorPos.x + pakSize.x, cursorPos.y + pakSize.y),
+            IM_COL32(0, 0, 0, 60),
+            10.0f
+        );
+
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 8);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 8);
+        if (isInserted){
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.263f, 0.263f, 0.443f, 1.0f));
+            if (ImGui::Button("Sync")) {
+                if(isGuest) {
+                    api->InsertPak(pak.pakId, [pak](const SatellaResponse& response) {
+                        if (response.isValid) {
+                            GameEngine::Instance->context->GetLogger()->info("Synced Controller Pak: {}", pak.name);
+                        } else {
+                            GameEngine::Instance->context->GetLogger()->error("Error syncing Controller Pak: {}", response.message);
+                        }
+                    });
+                } else {
+                    api->UploadPak(pak.pakId, [pak](const SatellaResponse& response) {
+                        if (response.isValid) {
+                            GameEngine::Instance->context->GetLogger()->info("Synced Controller Pak: {}", pak.name);
+                        } else {
+                            GameEngine::Instance->context->GetLogger()->error("Error syncing Controller Pak: {}", response.message);
+                        }
+                    });
+                }
+            }
+            ImGui::PopStyleColor();
+            ImGui::SameLine();
+        }
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
+        if (ImGui::Button(isInserted ? "Eject" : "Insert")) {
+            if (isInserted) {
+                if(!isGuest){
+                    api->UploadPak(pak.pakId, [pak](const SatellaResponse& response) {
+                        if (response.isValid) {
+                            GameEngine::Instance->context->GetLogger()->info("Inserted Controller Pak: {}", pak.name);
+                        } else {
+                            GameEngine::Instance->context->GetLogger()->error("Error inserting Controller Pak: {}", response.message);
+                        }
+                    });
+                }
+                api->EjectPak();
+            } else {
+                api->InsertPak(pak.pakId, [pak](const SatellaResponse& response) {
+                    if (response.isValid) {
+                        GameEngine::Instance->context->GetLogger()->info("Inserted Controller Pak: {}", pak.name);
+                    } else {
+                        GameEngine::Instance->context->GetLogger()->error("Error inserting Controller Pak: {}", response.message);
+                    }
+                });
+            }
+        }
+        ImGui::PopStyleColor();
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 8);
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.6f, 0.2f, 1.0f));
+        if (!isGuest && ImGui::Button("Options")) {
+            if(mSelectedPak != &pak) {
+                mSelectedPak = &pak;
+                memcpy(mPakName, pak.name.c_str(), std::min(sizeof(mPakName) - 1, pak.name.size()));
+                mPakName[sizeof(mPakName) - 1] = '\0';
+            } else {
+                mSelectedPak = nullptr;
+            }
+            ImGui::OpenPopup(("Controller Pak Options##CPO" + pak.pakId).c_str());
+        }
+        ImGui::PopStyleColor();
+        if(!isInserted && !isGuest) {
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 8);
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+            if (ImGui::Button("Delete")) {
+                api->DeletePak(pak.pakId, [pak](const SatellaResponse& response) {
+                    if (response.isValid) {
+                        GameEngine::Instance->context->GetLogger()->info("Deleted Controller Pak: {}", pak.name);
+                    } else {
+                        GameEngine::Instance->context->GetLogger()->error("Error deleting Controller Pak: {}", response.message);
+                    }
+                });
+            }
+            ImGui::PopStyleColor();
+        }
+    }
+
+    if(ImGui::BeginPopup(("Controller Pak Options##CPO" + pak.pakId).c_str())) {
+        ImGui::Text("Name:");
+        ImGui::PushItemWidth(200);
+        if(ImGui::InputText("##CPOName", mPakName, ARRAY_SIZE(mPakName))){
+            mSelectedPak->name = std::string(mPakName);
+        }
+        ImGui::PopItemWidth();
+        // List friends to handle access
+        ImGui::Text("Allow Access:");
+        ImGui::BeginChild("##PakAccessList", ImVec2(0, 100), true);
+        for (const auto& friendUser : *api->GetFriends()) {
+            bool hasAccess = std::find(pak.access.begin(), pak.access.end(), friendUser.ulid) != pak.access.end();
+            ImGui::PushID(friendUser.ulid.c_str());
+            if (ImGui::Checkbox(friendUser.alias.c_str(), &hasAccess)) {
+                if (hasAccess) {
+                    pak.access.push_back(friendUser.ulid);
+                } else {
+                    pak.access.erase(std::remove(pak.access.begin(), pak.access.end(), friendUser.ulid), pak.access.end());
+                }
+            }
+            ImGui::PopID();
+        }
+        ImGui::EndChild();
+        if(ImGui::Button("Save")) {
+            api->UpdatePak(pak, [](const SatellaResponse& response) {
+                if(response.isValid) {
+                    GameEngine::Instance->context->GetLogger()->info("Controller Pak updated successfully.");
+                } else {
+                    GameEngine::Instance->context->GetLogger()->error("Error updating Controller Pak: {}", response.message);
+                }
+            });
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::EndGroup();
+}
+
+void DrawEmptyControllerPakCard() {
+    auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
+    ImVec2 imageSize(128, 97);
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    ImVec2 pakSize = ImVec2(imageSize.x, imageSize.y);
+    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+
+    auto image = "satella/ControllerPak-Empty.png";
+    SatellaCache::LoadPNG(image);
+
+    // Start inner group
+    ImGui::BeginGroup();
+    ImGui::SetCursorScreenPos(cursorPos);
+    ImGui::Dummy(imageSize);
+    ImGui::SetCursorScreenPos(cursorPos);
+
+#ifdef DEBUG_WIDGET
+    ImVec2 pmax = ImGui::GetItemRectMax();
+#endif
+
+    // Centered image
+    ImGui::Image((ImTextureID) gui->GetTextureByName(image), imageSize);
+    ImGui::SetCursorScreenPos(cursorPos);
+
+#ifdef DEBUG_WIDGET
+    draw_list->AddRect(cursorPos, pmax, IM_COL32(255, 0, 0, 255));
+#endif
+
+    ImGui::SetCursorScreenPos(cursorPos);
+    if(ImGui::IsMouseHoveringRect(cursorPos, ImVec2(cursorPos.x + pakSize.x, cursorPos.y + pakSize.y))) {
+        draw_list->AddRectFilled(
+            cursorPos,
+            ImVec2(cursorPos.x + pakSize.x, cursorPos.y + pakSize.y),
+            IM_COL32(0, 0, 0, 60),
+            10.0f
+        );
+    }
+
+    if(ImGui::IsItemClicked()) {
+        api->CreatePak([](const SatellaResponse& response) {
+            if(response.isValid) {
+                GameEngine::Instance->context->GetLogger()->info("Controller Pak created successfully.");
+            } else {
+                GameEngine::Instance->context->GetLogger()->error("Error creating Controller Pak: {}", response.message);
+            }
+        });
+    }
+
+    ImGui::EndGroup();
 }
 
 void Net64Menu::AddRegisterTab() {
@@ -227,8 +457,8 @@ void Net64Menu::AddRegisterTab() {
         });
 }
 
-void Net64Menu::AddAuthTabs(){
-    auto user = GameEngine::Instance->gSatellaApi->GetUser();
+void Net64Menu::AddAccountTab(){
+    auto user = api->GetUser();
 
     if(user == nullptr){
         return;
@@ -257,7 +487,7 @@ void Net64Menu::AddAuthTabs(){
             ImGui::SameLine();
             ImGui::ColorEdit3("##AccentColor", accent, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
             // if (ImGui::IsItemDeactivatedAfterEdit()) {
-                // GameEngine::Instance->gSatellaApi->UpdateUser(user, [&](const SatellaResponse& response) {
+                // api->UpdateUser(user, [&](const SatellaResponse& response) {
                 //     if (response.isValid) {
                 //         GameEngine::Instance->context->GetLogger()->info("Accent color updated successfully.");
                 //     } else {
@@ -274,8 +504,10 @@ void Net64Menu::AddAuthTabs(){
     } else {
         mPortMenu->AddWidget(path, "No favorite games set.", WIDGET_TEXT);
     }
+}
 
-    path = { "Net64", "Friends", SECTION_COLUMN_1 };
+void Net64Menu::AddFriendsTab() {
+    WidgetPath path = { "Net64", "Friends", SECTION_COLUMN_1 };
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
 
     mPortMenu->AddWidget(path, "Search Friends", WIDGET_TEXT);
@@ -354,9 +586,43 @@ void Net64Menu::AddAuthTabs(){
             GameEngine::Instance->context->GetLogger()->error("Error fetching friends: {}", response.message);
         }
     });
+}
 
-    path = { "Net64", "Controller Pak", SECTION_COLUMN_1 };
+void Net64Menu::AddControllerPaksTab() {
+    WidgetPath path = { "Net64", "Controller Pak", SECTION_COLUMN_1 };
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
+    auto user = api->GetUser();
+    api->ListPaks([&](const SatellaResponse& response) {
+        mPortMenu->AddWidget(path, "Controller Paks List", WIDGET_TEXT);
+        if (response.isValid) {
+            auto paks = api->GetPaks();
+            auto user = api->GetUser();
+            mPortMenu->AddWidget(path, "ControllerPaks", WIDGET_CUSTOM)
+                .CustomFunction([paks](WidgetInfo& info) {
+                    size_t count = 0;
+                    for(auto& pak : *paks) {
+                        if(pak.ownerId == api->GetUser()->ulid) {
+                            count++;
+                        }
+                        ImGui::SameLine();
+                        DrawControllerPakCard(pak);
+                    }
+
+                    if(count < 3){
+                        ImGui::SameLine();
+                        DrawEmptyControllerPakCard();
+                    }
+                });
+        } else {
+            GameEngine::Instance->context->GetLogger()->error("Error fetching controller paks: {}", response.message);
+        }
+    });
+}
+
+void Net64Menu::AddAuthTabs() {
+    AddAccountTab();
+    AddFriendsTab();
+    AddControllerPaksTab();
 }
 
 void Net64Menu::AddTabs(){

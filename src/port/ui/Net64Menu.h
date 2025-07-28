@@ -18,5 +18,8 @@ public:
 
 private:
     void AddRegisterTab();
+    void AddAccountTab();
+    void AddFriendsTab();
+    void AddControllerPaksTab();
 };
 }

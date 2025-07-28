@@ -9,11 +9,15 @@ public:
     SatellaCache() = default;
     ~SatellaCache() = default;
 
+    static void LoadPNG(const std::string& path);
     static void LoadAvatar(const std::string& user, const std::vector<uint8_t>& data);
-    static bool IsAvatarLoaded(const std::string& ulid) {
-        return std::find(mAvatarCache.begin(), mAvatarCache.end(), ulid) != mAvatarCache.end();
+    static bool IsImageLoaded(const std::string& path) {
+        return std::find(mImageCache.begin(), mImageCache.end(), path) != mImageCache.end();
     }
 private:
+
+    static void CacheImage(const std::vector<uint8_t>& data, const std::string& path);
+
     // Cache for user avatars
-    static std::vector<std::string> mAvatarCache;
+    static std::vector<std::string> mImageCache;
 };

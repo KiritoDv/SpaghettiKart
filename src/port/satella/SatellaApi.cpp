@@ -86,7 +86,7 @@ void SatellaApi::DownloadAvatar(const User& _user) {
         return;
     }
 
-    if (SatellaCache::IsAvatarLoaded(_user.ulid)) {
+    if (SatellaCache::IsImageLoaded(_user.ulid)) {
         return;
     }
 
@@ -237,6 +237,159 @@ void SatellaApi::ModifyFriendRequest(const std::string& friendId, bool accept, D
                 }
             }
             callback({ ResponseCodes::OK, "Friend request modified successfully." });
+        } else {
+            callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+        }
+    });
+}
+
+void SatellaApi::ListPaks(DefaultCallback callback) {
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    cpr::Response response = cpr::Get(
+        cpr::Url{ SATELLA_API_BASE_URL "/cpak" },
+        cpr::Timeout{ SATELLA_MAX_TIMEOUT },
+        DEFAULT_AUTH
+        SSL_OPTIONS
+    );
+
+    if (response.status_code == (long) ResponseCodes::OK) {
+        this->paks = std::make_shared<std::vector<ControllerPak>>(json::parse(response.text).get<std::vector<ControllerPak>>());
+        callback({ ResponseCodes::OK, "Packs listed successfully." });
+    } else {
+        callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+    }
+}
+
+void SatellaApi::CreatePak(DefaultCallback callback) {
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    AsyncRequest([this, callback]() {
+        cpr::Response response = cpr::Post(
+            cpr::Url{ SATELLA_API_BASE_URL "/cpak" },
+            cpr::Header{ { "Content-Type", "application/json" } },
+            DEFAULT_AUTH
+            SSL_OPTIONS
+        );
+
+        if (response.status_code == (long) ResponseCodes::OK) {
+            auto pak = json::parse(response.text).get<ControllerPak>();
+            if (paks) {
+                paks->push_back(pak);
+            }
+            callback({ ResponseCodes::OK, "Pack created successfully." });
+        } else {
+            callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+        }
+    });
+}
+
+void SatellaApi::UploadPak(const std::string& pakId, DefaultCallback callback) {
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    if(currentPak == nullptr) {
+        callback({ ResponseCodes::BAD_REQUEST, "No current pack selected." });
+        return;
+    }
+
+    AsyncRequest([this, pakId, callback]() {
+        std::vector<uint8_t> data = SatellaPak::SavePak(*currentPak);
+        cpr::Buffer body(data.begin(), data.end(), "pak");
+
+        cpr::Response response = cpr::Put(
+            cpr::Url{ SATELLA_API_BASE_URL "/cpak/" + pakId },
+            cpr::Multipart{ {"pak", body }},
+            DEFAULT_AUTH
+            SSL_OPTIONS
+        );
+
+        if (response.status_code == (long) ResponseCodes::OK) {
+            callback({ ResponseCodes::OK, "Pack uploaded successfully." });
+        } else {
+            callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+        }
+    });
+}
+
+void SatellaApi::UpdatePak(const ControllerPak& pak, DefaultCallback callback) {
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    AsyncRequest([this, pak, callback]() {
+        cpr::Response response = cpr::Patch(
+            cpr::Url{ SATELLA_API_BASE_URL "/cpak/" + pak.pakId },
+            cpr::Body{json{
+                { "name", pak.name }, 
+                { "access", pak.access }
+            }.dump()},
+            cpr::Header{ { "Content-Type", "application/json" } },
+            DEFAULT_AUTH
+            SSL_OPTIONS
+        );
+
+        if (response.status_code == (long) ResponseCodes::OK) {
+            callback({ ResponseCodes::OK, "Pack updated successfully." });
+        } else {
+            callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+        }
+    });
+}
+
+void SatellaApi::InsertPak(const std::string& pakId, DefaultCallback callback) {
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    AsyncRequest([this, pakId, callback]() {
+        cpr::Response response = cpr::Get(
+            cpr::Url{ SATELLA_API_BASE_URL "/cpak/" + pakId },
+            cpr::Timeout{ SATELLA_MAX_TIMEOUT },
+            DEFAULT_AUTH
+            SSL_OPTIONS
+        );
+
+        if (response.status_code == (long) ResponseCodes::OK) {
+            auto data = std::vector<uint8_t>(response.text.begin(), response.text.end());
+            currentPak = std::make_shared<SatellaPakData>(SatellaPak::LoadPak(data));
+            currentPak->header.pakId = pakId;
+            callback({ ResponseCodes::OK, "Pack downloaded successfully." });
+        } else {
+            callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+        }
+    });
+}
+
+void SatellaApi::DeletePak(const std::string& pakId, DefaultCallback callback) {
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    AsyncRequest([this, pakId, callback]() {
+        cpr::Response response = cpr::Delete(
+            cpr::Url{ SATELLA_API_BASE_URL "/cpak/" + pakId },
+            DEFAULT_AUTH
+            SSL_OPTIONS
+        );
+
+        if (response.status_code == (long) ResponseCodes::OK) {
+            if (paks) {
+                paks->erase(std::remove_if(paks->begin(), paks->end(),
+                    [&pakId](const ControllerPak& pak) { return pak.pakId == pakId; }), paks->end());
+            }
+            callback({ ResponseCodes::OK, "Pack deleted successfully." });
         } else {
             callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
         }

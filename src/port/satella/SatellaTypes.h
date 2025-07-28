@@ -47,6 +47,17 @@ struct User {
     FriendRequestStatus status;
 };
 
+struct ControllerPak {
+    std::string pakId;
+    std::string ownerId;
+    std::string name;
+    std::string icon;
+    std::vector<std::string> access;
+
+    std::string createdAt;
+    std::string updatedAt;
+};
+
 struct SatellaResponse {
     ResponseCodes code;
     std::string message;
@@ -66,3 +77,6 @@ static std::vector<std::string> deviceNames = { "windows", "linux", "mac", "xbox
 void to_json(json& j, const AuthSession& auth);
 void from_json(const json& j, AuthSession& auth);
 void from_json(const json& j, User& user);
+
+void to_json(json& j, const ControllerPak& pak);
+void from_json(const json& j, ControllerPak& pak);

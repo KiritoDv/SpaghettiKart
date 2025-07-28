@@ -33,3 +33,29 @@ void from_json(const json& j, User& user) {
         user.status = FriendRequestStatus::SENT;
     }
 }
+
+void to_json(json& j, const ControllerPak& pak) {
+    j = json{
+        CNV(pak, pakId),
+        CNV(pak, ownerId),
+        CNV(pak, name),
+        CNV(pak, icon),
+        CNV(pak, access),
+        CNV(pak, createdAt),
+        CNV(pak, updatedAt)
+    };
+}
+
+void from_json(const json& j, ControllerPak& pak) {
+    LINK(pak, pakId);
+    LINK(pak, ownerId);
+    LINK(pak, name);
+    LINK(pak, icon);
+    if (j.contains("access")) {
+        pak.access = j.at("access").get<std::vector<std::string>>();
+    } else {
+        pak.access.clear();
+    }
+    LINK(pak, createdAt);
+    LINK(pak, updatedAt);
+}
