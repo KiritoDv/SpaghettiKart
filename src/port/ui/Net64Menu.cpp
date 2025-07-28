@@ -11,6 +11,7 @@ using namespace UIWidgets;
 static char mCodeBuf[7] = { 0 };
 static char mSearchBuf[64] = { 0 };
 static std::vector<User> mSearchResults;
+static SatellaApi* api;
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
@@ -56,6 +57,8 @@ void DrawFriendCard(User& user, FriendCardType type) {
     float imageSize = 80;
     const char* name = user.alias.c_str();
     float textWidth = ImGui::CalcTextSize(name).x;
+
+    api->DownloadAvatar(user);
 
     ImVec2 cardSize = ImVec2(std::max(textWidth + 20.0f, imageSize + 20.0f), imageSize + 60 + (type == FriendCardType::Search ? 30 : 0)); // Card size with padding
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
@@ -197,8 +200,6 @@ void DrawFriendCard(User& user, FriendCardType type) {
     ImGui::PopID();
 }
 
-SatellaApi* api;
-
 void Net64Menu::AddRegisterTab() {
     WidgetPath path = { "Net64", "Register", SECTION_COLUMN_1 };
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
@@ -273,18 +274,13 @@ void Net64Menu::AddAuthTabs(){
     } else {
         mPortMenu->AddWidget(path, "No favorite games set.", WIDGET_TEXT);
     }
-    
+
     path = { "Net64", "Friends", SECTION_COLUMN_1 };
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
 
     mPortMenu->AddWidget(path, "Search Friends", WIDGET_TEXT);
     mPortMenu->AddWidget(path, "##SearchFriendsInput", WIDGET_INPUT_TEXT)
         .Options(InputTextOptions(mSearchBuf, ARRAY_SIZE(mSearchBuf), 0, "Search by username"))
-        .PreFunc([](WidgetInfo& info) {
-            for (auto& friendUser : mSearchResults) {
-                api->DownloadAvatar(friendUser);
-            }
-        })
         .PostFunc([](WidgetInfo& info) {
             // Draw the search results if any
             if (!mSearchResults.empty()) {
@@ -358,6 +354,9 @@ void Net64Menu::AddAuthTabs(){
             GameEngine::Instance->context->GetLogger()->error("Error fetching friends: {}", response.message);
         }
     });
+
+    path = { "Net64", "Controller Pak", SECTION_COLUMN_1 };
+    mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
 }
 
 void Net64Menu::AddTabs(){
