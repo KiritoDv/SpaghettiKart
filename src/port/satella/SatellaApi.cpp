@@ -1,6 +1,7 @@
 #include "SatellaApi.h"
 
 #include "port/Engine.h"
+#include "SatellaCache.h"
 #include <cpr/cpr.h>
 
 #define SATELLA_API_BASE_URL "http://localhost:8080/v1"
@@ -17,12 +18,12 @@
 
 #define DEFAULT_AUTH cpr::Header{ \
                         { "Authorization", "Bearer " + session->token }, \
-                        { "x-refresh-token", session->refreshToken } \
+                        { "x-refresh-token", session->refreshToken }, \
                         { "x-net64-key", SATELLA_API_KEY }, \
                         { "x-net64-secret", SATELLA_API_SECRET } \
                     }
 
-void SatellaApi::LinkAccount(std::string linkCode, DeviceType device, Callback callback) {
+void SatellaApi::LinkAccount(std::string linkCode, DeviceType device, DefaultCallback callback) {
     cpr::Response response = cpr::Post(
         cpr::Url{ SATELLA_API_BASE_URL "/auth/link" },
         cpr::Body{json{
@@ -47,7 +48,7 @@ void SatellaApi::LinkAccount(std::string linkCode, DeviceType device, Callback c
     }
 }
 
-void SatellaApi::SyncUser(Callback callback) {
+void SatellaApi::SyncUser(DefaultCallback callback) {
     if (!session || session->token.empty()) {
         callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
         return;
@@ -62,7 +63,137 @@ void SatellaApi::SyncUser(Callback callback) {
 
     if (response.status_code == (long) ResponseCodes::OK) {
         this->user = std::make_shared<User>(json::parse(response.text).get<User>());
+        DownloadAvatar(*user);
         callback({ ResponseCodes::OK, "User synced successfully." });
+    } else {
+        callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+    }
+}
+
+void SatellaApi::DownloadAvatar(const User& _user) {
+    if (_user.avatar.empty()) {
+        return;
+    }
+
+    cpr::Response response = cpr::Get(
+        cpr::Url{ _user.avatar },
+        cpr::Timeout{ SATELLA_MAX_TIMEOUT }
+        SSL_OPTIONS
+    );
+
+    if (response.status_code == (long) ResponseCodes::OK) {
+        auto data = std::vector<uint8_t>(response.text.begin(), response.text.end());
+        SatellaCache::LoadAvatar(_user.ulid, data);
+    } else {
+        GameEngine::Instance->context->GetLogger()->error("Error downloading avatar: {}", response.text);
+    }
+}
+
+void SatellaApi::GetFriends(DefaultCallback callback) {
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    cpr::Response response = cpr::Get(
+        cpr::Url{ SATELLA_API_BASE_URL "/friends" },
+        cpr::Timeout{ SATELLA_MAX_TIMEOUT },
+        DEFAULT_AUTH
+        SSL_OPTIONS
+    );
+
+    if (response.status_code == (long) ResponseCodes::OK) {
+        this->friends = std::make_shared<std::vector<User>>(json::parse(response.text).get<std::vector<User>>());
+        for (auto& friendUser : *friends) {
+            DownloadAvatar(friendUser);
+        }
+        callback({ ResponseCodes::OK, "Friends list retrieved successfully." });
+    } else {
+        callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+    }
+}
+
+void SatellaApi::SearchFriends(const std::string& query, Callback<std::vector<User>> callback) {
+    if (!session || session->token.empty()) {
+        callback(std::vector<User>{});
+        return;
+    }
+
+    cpr::Response response = cpr::Get(
+        cpr::Url{ SATELLA_API_BASE_URL "/friends/search" },
+        cpr::Parameters{{ "q", query }},
+        cpr::Timeout{ SATELLA_MAX_TIMEOUT },
+        DEFAULT_AUTH
+        SSL_OPTIONS
+    );
+
+    if (response.status_code == (long) ResponseCodes::OK) {
+        auto users = json::parse(response.text).get<std::vector<User>>();
+        callback(users);
+    } else {
+        callback(std::vector<User>{});
+        GameEngine::Instance->context->GetLogger()->error("Error searching friends: {}", response.text);
+    }
+}
+
+void SatellaApi::AddFriend(const std::string& friendId, DefaultCallback callback) {
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    cpr::Response response = cpr::Post(
+        cpr::Url{ SATELLA_API_BASE_URL "/friends/add" },
+        cpr::Body{ json{{ "friendId", friendId }}.dump() },
+        cpr::Header{ { "Content-Type", "application/json" } },
+        DEFAULT_AUTH
+        SSL_OPTIONS
+    );
+
+    if (response.status_code == (long) ResponseCodes::OK) {
+        callback({ ResponseCodes::OK, "Friend added successfully." });
+    } else {
+        callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+    }
+}
+
+void SatellaApi::RemoveFriend(const std::string& friendId, DefaultCallback callback) {
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    cpr::Response response = cpr::Post(
+        cpr::Url{ SATELLA_API_BASE_URL "/friends/remove" },
+        cpr::Body{ json{{ "friendId", friendId }}.dump() },
+        cpr::Header{ { "Content-Type", "application/json" } },
+        DEFAULT_AUTH
+        SSL_OPTIONS
+    );
+
+    if (response.status_code == (long) ResponseCodes::OK) {
+        callback({ ResponseCodes::OK, "Friend removed successfully." });
+    } else {
+        callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+    }
+}
+
+void SatellaApi::ModifyFriendRequest(const std::string& friendId, bool accept, DefaultCallback callback) {
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    cpr::Response response = cpr::Post(
+        cpr::Url{ SATELLA_API_BASE_URL "/friends/modify" },
+        cpr::Body{ json{{ "friendId", friendId }, { "accept", accept }}.dump() },
+        cpr::Header{ { "Content-Type", "application/json" } },
+        DEFAULT_AUTH
+        SSL_OPTIONS
+    );
+
+    if (response.status_code == (long) ResponseCodes::OK) {
+        callback({ ResponseCodes::OK, "Friend request modified successfully." });
     } else {
         callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
     }

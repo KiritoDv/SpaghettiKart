@@ -2,6 +2,7 @@
 #define MENUTYPES_H
 
 #include <libultraship/libultraship.h>
+#include <functional>
 #include "UIWidgets.h"
 
 typedef enum {
@@ -27,7 +28,7 @@ struct disabledInfo;
 using VoidFunc = void (*)();
 using DisableInfoFunc = bool (*)(disabledInfo&);
 using DisableVec = std::vector<DisableOption>;
-using WidgetFunc = void (*)(WidgetInfo&);
+using WidgetFunc = std::function<void(WidgetInfo&)>;
 
 typedef enum {
     WIDGET_CHECKBOX,

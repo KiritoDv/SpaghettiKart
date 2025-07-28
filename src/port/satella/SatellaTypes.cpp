@@ -11,7 +11,11 @@ void from_json(const json& j, AuthSession& auth) {
 }
 
 void from_json(const json& j, User& user) {
-    LINK(user, ulid);
+    if(j.contains("ulid")) {
+        user.ulid = j.at("ulid").get<std::string>();
+    } else {
+        user.ulid = j.at("userId").get<std::string>();
+    }
     LINK(user, username);
     LINK(user, alias);
     LINK(user, avatar);
@@ -20,5 +24,10 @@ void from_json(const json& j, User& user) {
         user.favoriteGames = j.at("favoriteGames").get<std::vector<std::string>>();
     } else {
         user.favoriteGames.clear();
+    }
+    if(j.contains("pending")) {
+        user.pending = j.at("pending").get<bool>();
+    } else {
+        user.pending = false;
     }
 }

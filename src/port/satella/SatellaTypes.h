@@ -38,6 +38,10 @@ struct User {
     std::string avatar;
     std::string accentColor;
     std::vector<std::string> favoriteGames;
+
+    bool pending = false; // Used for friend requests
+
+    std::vector<uint8_t> loadedAvatar; // Used for caching avatar data
 };
 
 struct SatellaResponse {
