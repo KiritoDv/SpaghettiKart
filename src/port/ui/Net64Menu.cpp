@@ -430,6 +430,23 @@ void DrawEmptyControllerPakCard() {
     ImGui::EndGroup();
 }
 
+void DrawUpdateTitle(std::string title, std::function<void()> callback) {
+    float baseY = ImGui::GetCursorPosY();
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 7);
+    ImGui::Text(title.c_str());
+    ImGui::SameLine();
+    ImGui::SetCursorPosY(baseY);
+    UIWidgets::ButtonOptions options = {};
+    options.color = UIWidgets::Colors::Indigo;
+    options.size = UIWidgets::Sizes::Inline;
+    options.tooltip = "Sync";
+    if (UIWidgets::Button(ICON_FA_UNDO, options)) {
+        if (callback) {
+            callback();
+        }
+    }
+}
+
 void Net64Menu::AddRegisterTab() {
     WidgetPath path = { "Net64", "Register", SECTION_COLUMN_1 };
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
@@ -510,7 +527,20 @@ void Net64Menu::AddFriendsTab() {
     WidgetPath path = { "Net64", "Friends", SECTION_COLUMN_1 };
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
 
-    mPortMenu->AddWidget(path, "Search Friends", WIDGET_TEXT);
+    mPortMenu->AddWidget(path, "FriendsTitle", WIDGET_CUSTOM)
+        .CustomFunction([](WidgetInfo& info) {
+            DrawUpdateTitle("Friends", []() {
+                api->GetFriends([](const SatellaResponse& response) {
+                    if (response.isValid) {
+                        GameEngine::Instance->context->GetLogger()->info("Friends list updated successfully.");
+                    } else {
+                        GameEngine::Instance->context->GetLogger()->error("Error updating friends list: {}", response.message);
+                    }
+                });
+            });
+        });
+    
+    mPortMenu->AddWidget(path, "Search Users", WIDGET_TEXT);
     mPortMenu->AddWidget(path, "##SearchFriendsInput", WIDGET_INPUT_TEXT)
         .Options(InputTextOptions(mSearchBuf, ARRAY_SIZE(mSearchBuf), 0, "Search by username"))
         .PostFunc([](WidgetInfo& info) {
@@ -593,7 +623,18 @@ void Net64Menu::AddControllerPaksTab() {
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
     auto user = api->GetUser();
     api->ListPaks([&](const SatellaResponse& response) {
-        mPortMenu->AddWidget(path, "Controller Paks List", WIDGET_TEXT);
+        mPortMenu->AddWidget(path, "ControllerPaksListTitle", WIDGET_CUSTOM)
+            .CustomFunction([](WidgetInfo& info) {
+                DrawUpdateTitle("Controller Paks", []() {
+                    api->ListPaks([](const SatellaResponse& response) {
+                        if (response.isValid) {
+                            GameEngine::Instance->context->GetLogger()->info("Controller Paks updated successfully.");
+                        } else {
+                            GameEngine::Instance->context->GetLogger()->error("Error updating Controller Paks: {}", response.message);
+                        }
+                    });
+                });
+            });
         if (response.isValid) {
             auto paks = api->GetPaks();
             auto user = api->GetUser();
