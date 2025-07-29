@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20.0)
 
 # Set the project version and language
 project(Spaghettify VERSION 0.1.0 LANGUAGES C CXX ASM)
@@ -81,7 +81,7 @@ include(cmake/automate-vcpkg.cmake)
 set(VCPKG_TRIPLET x64-windows-static)
 set(VCPKG_TARGET_TRIPLET x64-windows-static)
 vcpkg_bootstrap()
-vcpkg_install_packages(zlib bzip2 libzip libpng sdl2 sdl2-net glew glfw3 nlohmann-json tinyxml2 spdlog libogg libvorbis cpr)
+vcpkg_install_packages(zlib bzip2 libzip libpng sdl2 sdl2-net glew glfw3 nlohmann-json tinyxml2 spdlog libogg libvorbis)
 
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -355,15 +355,24 @@ FetchContent_MakeAvailable(dr_libs)
 include_directories(${STB_DIR})
 
 #=================== cpr ===================
-if(NOT WIN32)
+if(WIN32)
+    set(CURL_STATIC_CRT ON)
+    set(YAML_BUILD_SHARED_LIBS OFF)
+    set(BUILD_SHARED_LIBS OFF)
+    set(BUILD_EXAMPLES OFF)
+else()
     set(CPR_USE_SYSTEM_CURL TRUE)
 endif()
-set(CURL_USE_LIBPSL OFF)
 FetchContent_Declare(
     cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
-    GIT_TAG e10e86f4327aff234b0dda73622557d19ff281c6
+    GIT_TAG 1.11.0
 )
 FetchContent_MakeAvailable(cpr)
+if(WIN32)
+    set_target_properties(cpr PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
 
 #==============================================================================#
 # Libultraship Integration                                                     #

@@ -352,7 +352,7 @@ extern "C" s32 osPfsNumFiles(OSPfs* pfs, s32* max_files, s32* files_used) {
 
 extern "C" s32 osPfsDeleteFile(OSPfs* pfs, u16 company_code, u32 game_code, u8* game_name, u8* ext_name) {
     if(SatellaPak::IsVirtualPak()) {
-        return (s32) SatellaPak::DeleteFile(company_code, game_code, game_name, ext_name);
+        return (s32) SatellaPak::DeletePakFile(company_code, game_code, game_name, ext_name);
     }
 
     if (company_code == 0 || game_code == 0) {

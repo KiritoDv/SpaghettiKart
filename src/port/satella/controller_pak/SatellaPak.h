@@ -1,10 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <cstdint>
 
 enum class PfsResult {
-    NO_ERROR,
+    PAK_NO_ERROR,
     ERR_NOPACK,
     ERR_NEW_PACK,
     ERR_INCONSISTENT,
@@ -53,7 +54,7 @@ public:
     static PfsResult FindFile(uint16_t company_code, uint32_t game_code, uint8_t* game_name, uint8_t* ext_name, int32_t* file_no);
     static PfsResult ReadWriteFile(int32_t file_no, uint8_t flag, int offset, int size_in_bytes, uint8_t* data_buffer);
     static PfsResult NumFiles(int32_t* max_files, int32_t* files_used);
-    static PfsResult DeleteFile(uint16_t company_code, uint32_t game_code, uint8_t* game_name, uint8_t* ext_name);
+    static PfsResult DeletePakFile(uint16_t company_code, uint32_t game_code, uint8_t* game_name, uint8_t* ext_name);
 
 private:
     static bool PakHeaderRead(uint32_t* file_size, uint32_t* game_code, uint16_t* company_code, uint8_t* ext_name, uint8_t* game_name, uint8_t fileIndex);

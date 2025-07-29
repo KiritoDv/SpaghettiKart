@@ -118,7 +118,7 @@ PfsResult SatellaPak::FreeBlocks(int32_t* bytes_not_used) {
 
     *bytes_not_used = (123 - usedSpace) << 8;
 
-    return PfsResult::NO_ERROR;
+    return PfsResult::PAK_NO_ERROR;
 }
 
 PfsResult SatellaPak::AllocateFile(uint16_t company_code, uint32_t game_code, uint8_t* game_name, uint8_t* ext_name, uint32_t file_size_in_bytes, int32_t* file_no) {
@@ -158,7 +158,7 @@ PfsResult SatellaPak::AllocateFile(uint16_t company_code, uint32_t game_code, ui
     pak->files[freeFileIndex].data.resize(file_size_in_bytes);
 
     *file_no = freeFileIndex;
-    return PfsResult::NO_ERROR;
+    return PfsResult::PAK_NO_ERROR;
 }
 
 PfsResult SatellaPak::FileState(int32_t file_no, SatellaPakHeader* state) {
@@ -181,7 +181,7 @@ PfsResult SatellaPak::FileState(int32_t file_no, SatellaPakHeader* state) {
     memcpy(state->extName, ext_name, ExtNameSize);
     memcpy(state->gameName, game_name, MaxFiles);
 
-    return PfsResult::NO_ERROR;
+    return PfsResult::PAK_NO_ERROR;
 }
 
 PfsResult SatellaPak::FindFile(uint16_t company_code, uint32_t game_code, uint8_t* game_name, uint8_t* ext_name, int32_t* file_no) {
@@ -203,7 +203,7 @@ PfsResult SatellaPak::FindFile(uint16_t company_code, uint32_t game_code, uint8_
                 (strcmp((const char*) game_name, (const char*) game_name_) == 0) &&
                 (strcmp((const char*) ext_name, (const char*) ext_name_) == 0)) {
                 *file_no = i;
-                return PfsResult::NO_ERROR;
+                return PfsResult::PAK_NO_ERROR;
             }
         }
     }
@@ -232,7 +232,7 @@ PfsResult SatellaPak::ReadWriteFile(int32_t file_no, uint8_t write, int offset, 
         return PfsResult::ERR_INVALID;
     }
 
-    return PfsResult::NO_ERROR;
+    return PfsResult::PAK_NO_ERROR;
 }
 
 PfsResult SatellaPak::NumFiles(int32_t* max_files, int32_t* files_used) {
@@ -258,10 +258,10 @@ PfsResult SatellaPak::NumFiles(int32_t* max_files, int32_t* files_used) {
     *files_used = files;
     *max_files = MaxFiles;
 
-    return PfsResult::NO_ERROR;
+    return PfsResult::PAK_NO_ERROR;
 }
 
-PfsResult SatellaPak::DeleteFile(uint16_t company_code, uint32_t game_code, uint8_t* game_name, uint8_t* ext_name) {
+PfsResult SatellaPak::DeletePakFile(uint16_t company_code, uint32_t game_code, uint8_t* game_name, uint8_t* ext_name) {
     auto pak = GameEngine::Instance->gSatellaApi->GetCurrentPak();
 
     if (company_code == 0 || game_code == 0) {
@@ -285,9 +285,9 @@ PfsResult SatellaPak::DeleteFile(uint16_t company_code, uint32_t game_code, uint
                 strcmp((const char*) ext_name, (const char*) ext_name_) == 0) {
             pak->files[i].data.clear();
             pak->header[i] = {};
-            return PfsResult::NO_ERROR;
+            return PfsResult::PAK_NO_ERROR;
         }
     }
 
-    return PfsResult::NO_ERROR;
+    return PfsResult::PAK_NO_ERROR;
 }
