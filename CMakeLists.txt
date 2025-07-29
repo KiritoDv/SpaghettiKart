@@ -354,14 +354,16 @@ FetchContent_MakeAvailable(dr_libs)
 #=================== STB ===================
 include_directories(${STB_DIR})
 
+#=================== cpr ===================
 if(NOT WIN32)
     set(CPR_USE_SYSTEM_CURL TRUE)
-    FetchContent_Declare(
-        cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
-        GIT_TAG e10e86f4327aff234b0dda73622557d19ff281c6
-    )
-    FetchContent_MakeAvailable(cpr)
 endif()
+set(CURL_USE_LIBPSL OFF)
+FetchContent_Declare(
+    cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
+    GIT_TAG e10e86f4327aff234b0dda73622557d19ff281c6
+)
+FetchContent_MakeAvailable(cpr)
 
 #==============================================================================#
 # Libultraship Integration                                                     #

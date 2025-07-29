@@ -34,6 +34,10 @@ void AsyncRequest(const std::function<void()>& func) {
     }).detach();
 }
 
+std::string SatellaApi::GetAuthURL() {
+    return SATELLA_API_BASE_URL "/auth";
+}
+
 void SatellaApi::LinkAccount(std::string linkCode, DeviceType device, DefaultCallback callback) {
     cpr::Response response = cpr::Post(
         cpr::Url{ SATELLA_API_BASE_URL "/auth/link" },
@@ -79,6 +83,15 @@ void SatellaApi::SyncUser(DefaultCallback callback) {
     } else {
         callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
     }
+}
+
+void SatellaApi::Logout(DefaultCallback callback) {
+    session.reset();
+    currentPak.reset();
+    friends.reset();
+    paks.reset();
+    SaveSession();
+    callback({ ResponseCodes::OK, "Logged out successfully." });
 }
 
 void SatellaApi::DownloadAvatar(const User& _user) {
@@ -402,7 +415,14 @@ void SatellaApi::DeletePak(const std::string& pakId, DefaultCallback callback) {
 }
 
 void SatellaApi::SaveSession() {
+    std::ofstream satellaFile(Ship::Context::GetPathRelativeToAppDirectory("satella.json"));
+
     if (!session) {
+        if (satellaFile.is_open()) {
+            satellaFile << "{}"; // Clear the file if no session exists
+            satellaFile.close();
+        }
+        GameEngine::Instance->context->GetLogger()->info("No session to save, satella.json cleared.");
         return;
     }
 
@@ -421,7 +441,6 @@ void SatellaApi::SaveSession() {
         }
     };
 
-    std::ofstream satellaFile(Ship::Context::GetPathRelativeToAppDirectory("satella.json"));
     if (satellaFile.is_open()) {
         satellaFile << satella.dump(4);
         satellaFile.close();

@@ -49,6 +49,19 @@ std::string toHex(int value) {
     return ss.str();
 }
 
+#ifndef __SWITCH__
+void LaunchBrowser(const std::string& url) {
+#if defined(_WIN32)
+    std::string command = "start " + url;
+#elif defined(__APPLE__)
+    std::string command = "open " + url;
+#else // Linux and others
+    std::string command = "xdg-open " + url;
+#endif
+    system(command.c_str());
+}
+#endif
+
 enum class FriendCardType {
     Search,
     Pending,
@@ -467,20 +480,32 @@ void Net64Menu::AddRegisterTab() {
         .CVar("gNet64.LinkCode")
         .Options(InputTextOptions(mCodeBuf, ARRAY_SIZE(mCodeBuf), 0, "123456"));
 
-    mPortMenu->AddWidget(path, "Link Account", WIDGET_BUTTON)
-        .Options(UIWidgets::ButtonOptions().Size(UIWidgets::Sizes::Inline))
-        .Callback([](WidgetInfo& info) {
-            api->LinkAccount(std::string(mCodeBuf), DeviceType::MAC, [&](const SatellaResponse& _) {
+    mPortMenu->AddWidget(path, "AccountActions", WIDGET_CUSTOM)
+        .CustomFunction([](WidgetInfo& info) {
+            UIWidgets::ButtonOptions options = {};
+            options.color = UIWidgets::Colors::Indigo;
+            options.size = UIWidgets::Sizes::Inline;
+            options.tooltip = "Sync";
+            if (UIWidgets::Button("Link Account", options)) {
+                memset(mCodeBuf, 0, sizeof(mCodeBuf));
+                api->LinkAccount(std::string(mCodeBuf), DeviceType::MAC, [&](const SatellaResponse& _) {
                 api->SyncUser([&](const SatellaResponse& response) {
-                    if(response.isValid) {
-                        GameEngine::Instance->context->GetLogger()->info("Successfully linked account: {}", response.message);
-                        mPortMenu->RemoveSidebarEntry("Net64", "Register");
-                        mNet64Menu->AddAuthTabs();
-                    } else {
-                        GameEngine::Instance->context->GetLogger()->error("Error linking account: {}", response.message);
-                    }
+                        if(response.isValid) {
+                            GameEngine::Instance->context->GetLogger()->info("Successfully linked account: {}", response.message);
+                            mPortMenu->RemoveSidebarEntry("Net64", "Register");
+                            mNet64Menu->AddAuthTabs();
+                        } else {
+                            GameEngine::Instance->context->GetLogger()->error("Error linking account: {}", response.message);
+                        }
+                    });
                 });
-            });
+            }
+        #ifndef __SWITCH__
+            ImGui::SameLine();
+            if (UIWidgets::Button("Register", options)) {
+                LaunchBrowser(api->GetAuthURL());
+            }
+        #endif
         });
 }
 
@@ -531,6 +556,22 @@ void Net64Menu::AddAccountTab(){
     } else {
         mPortMenu->AddWidget(path, "No favorite games set.", WIDGET_TEXT);
     }
+
+    mPortMenu->AddWidget(path, "Logout", WIDGET_BUTTON)
+        .Options(UIWidgets::ButtonOptions().Size(UIWidgets::Sizes::Inline))
+        .Callback([](WidgetInfo& info) {
+            api->Logout([&](const SatellaResponse& response) {
+                if (response.isValid) {
+                    GameEngine::Instance->context->GetLogger()->info("Logged out successfully.");
+                    mPortMenu->RemoveSidebarEntry("Net64", "Account");
+                    mPortMenu->RemoveSidebarEntry("Net64", "Friends");
+                    mPortMenu->RemoveSidebarEntry("Net64", "Controller Pak");
+                    mNet64Menu->AddRegisterTab();
+                } else {
+                    GameEngine::Instance->context->GetLogger()->error("Error logging out: {}", response.message);
+                }
+            });
+        });
 }
 
 void Net64Menu::AddFriendsTab() {

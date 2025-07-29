@@ -19,8 +19,10 @@ public:
     SatellaApi() = default;
     ~SatellaApi() = default;
 
+    std::string GetAuthURL();
     void LinkAccount(std::string linkCode, DeviceType device, DefaultCallback callback);
     void SyncUser(DefaultCallback callback);
+    void Logout(DefaultCallback callback);
     void DownloadAvatar(const User& user);
 
     void GetFriends(DefaultCallback callback);
