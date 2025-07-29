@@ -32,7 +32,7 @@ public:
     void ListPaks(DefaultCallback callback);
     void CreatePak(DefaultCallback callback);
     void UploadPak(const std::string& pakId, DefaultCallback callback);
-    void UpdatePak(const ControllerPak& pak, DefaultCallback callback);
+    void UpdatePak(const VirtualControllerPak& pak, DefaultCallback callback);
     void InsertPak(const std::string& pakId, DefaultCallback callback);
     void DeletePak(const std::string& pakId, DefaultCallback callback);
 
@@ -57,7 +57,7 @@ public:
         return currentPak;
     }
 
-    std::shared_ptr<std::vector<ControllerPak>> GetPaks() const {
+    std::shared_ptr<std::vector<VirtualControllerPak>> GetPaks() const {
         return paks;
     }
 
@@ -70,5 +70,5 @@ protected:
     std::shared_ptr<std::vector<User>> friends;
 
     std::shared_ptr<SatellaPakData> currentPak;
-    std::shared_ptr<std::vector<ControllerPak>> paks;
+    std::shared_ptr<std::vector<VirtualControllerPak>> paks;
 };

@@ -13,7 +13,7 @@ static char mCodeBuf[6 + 1] = { 0 };
 static char mPakName[16 + 1] = { 0 };
 static char mSearchBuf[64 + 1] = { 0 };
 static std::vector<User> mSearchResults;
-static ControllerPak* mSelectedPak;
+static VirtualControllerPak* mSelectedPak;
 static SatellaApi* api;
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -203,7 +203,7 @@ void DrawFriendCard(User& user, FriendCardType type) {
     ImGui::PopID();
 }
 
-void DrawControllerPakCard(ControllerPak& pak) {
+void DrawControllerPakCard(VirtualControllerPak& pak) {
     auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
     ImVec2 imageSize(128, 97);
     const char* name = pak.name.c_str();
@@ -212,7 +212,7 @@ void DrawControllerPakCard(ControllerPak& pak) {
 
     auto user = api->GetUser();
     auto current = api->GetCurrentPak();
-    bool isInserted = current && current->header.pakId == pak.pakId;
+    bool isInserted = current && current->pakId == pak.pakId;
     bool isGuest = pak.ownerId != user->ulid;
 
     ImVec2 pakSize = ImVec2(imageSize.x, imageSize.y); // Card size with padding

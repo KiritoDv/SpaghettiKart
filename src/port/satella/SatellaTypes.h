@@ -47,7 +47,7 @@ struct User {
     FriendRequestStatus status;
 };
 
-struct ControllerPak {
+struct VirtualControllerPak {
     std::string pakId;
     std::string ownerId;
     std::string name;
@@ -78,5 +78,5 @@ void to_json(json& j, const AuthSession& auth);
 void from_json(const json& j, AuthSession& auth);
 void from_json(const json& j, User& user);
 
-void to_json(json& j, const ControllerPak& pak);
-void from_json(const json& j, ControllerPak& pak);
+void to_json(json& j, const VirtualControllerPak& pak);
+void from_json(const json& j, VirtualControllerPak& pak);

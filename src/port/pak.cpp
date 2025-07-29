@@ -5,6 +5,8 @@
 #include <libultraship/libultra.h>
 #include <save.h>
 
+#include "port/satella/SatellaApi.h"
+
 #define MAX_FILES 16
 #define EXT_NAME_SIZE 4
 #define GAME_NAME_SIZE 16
@@ -107,6 +109,10 @@ extern "C" s32 osPfsInit(OSMesgQueue* queue, OSPfs* pfs, int channel) {
 }
 
 extern "C" s32 osPfsFreeBlocks(OSPfs* pfs, s32* bytes_not_used) {
+    if(SatellaPak::IsVirtualPak()) {
+        return (s32) SatellaPak::FreeBlocks(bytes_not_used);
+    }
+
     ControllerPak pak;
 
     pak.header.open("controllerPak_header.sav", std::ios::binary | std::ios::in | std::ios::out);
@@ -146,6 +152,9 @@ extern "C" s32 osPfsFreeBlocks(OSPfs* pfs, s32* bytes_not_used) {
 
 extern "C" s32 osPfsAllocateFile(OSPfs* pfs, u16 company_code, u32 game_code, u8* game_name, u8* ext_name,
                                  int file_size_in_bytes, s32* file_no) {
+    if(SatellaPak::IsVirtualPak()) {
+        return (s32) SatellaPak::AllocateFile(company_code, game_code, game_name, ext_name, file_size_in_bytes, file_no);
+    }
 
     if ((company_code == 0) || (game_code == 0)) {
         return PFS_ERR_INVALID;
@@ -205,6 +214,10 @@ extern "C" s32 osPfsAllocateFile(OSPfs* pfs, u16 company_code, u32 game_code, u8
 }
 
 extern "C" s32 osPfsFileState(OSPfs* pfs, s32 file_no, OSPfsState* state) {
+    if(SatellaPak::IsVirtualPak()) {
+        return (s32) SatellaPak::FileState(file_no, (SatellaPakHeader*) state);
+    }
+
     u32 file_size = 0;
     u32 game_code = 0;
     u16 company_code = 0;
@@ -241,6 +254,10 @@ extern "C" s32 osPfsFileState(OSPfs* pfs, s32 file_no, OSPfsState* state) {
 }
 
 extern "C" s32 osPfsFindFile(OSPfs* pfs, u16 company_code, u32 game_code, u8* game_name, u8* ext_name, s32* file_no) {
+    if(SatellaPak::IsVirtualPak()) {
+        return (s32) SatellaPak::FindFile(company_code, game_code, game_name, ext_name, file_no);
+    }
+
     ControllerPak pak;
 
     for (size_t i = 0; i < MAX_FILES; i++) {
@@ -272,6 +289,10 @@ extern "C" s32 osPfsFindFile(OSPfs* pfs, u16 company_code, u32 game_code, u8* ga
 }
 
 extern "C" s32 osPfsReadWriteFile(OSPfs* pfs, s32 file_no, u8 flag, int offset, int size_in_bytes, u8* data_buffer) {
+    if(SatellaPak::IsVirtualPak()) {
+        return (s32) SatellaPak::ReadWriteFile(file_no, flag, offset, size_in_bytes, data_buffer);
+    }
+
     ControllerPak pak;
 
     char filename[100];
@@ -302,6 +323,10 @@ extern "C" s32 osPfsReadWriteFile(OSPfs* pfs, s32 file_no, u8 flag, int offset, 
 }
 
 extern "C" s32 osPfsNumFiles(OSPfs* pfs, s32* max_files, s32* files_used) {
+    if(SatellaPak::IsVirtualPak()) {
+        return (s32) SatellaPak::NumFiles(max_files, files_used);
+    }
+
     u8 files = 0;
     for (size_t i = 0; i < MAX_FILES; i++) {
         u32 file_size = 0;
@@ -326,6 +351,10 @@ extern "C" s32 osPfsNumFiles(OSPfs* pfs, s32* max_files, s32* files_used) {
 }
 
 extern "C" s32 osPfsDeleteFile(OSPfs* pfs, u16 company_code, u32 game_code, u8* game_name, u8* ext_name) {
+    if(SatellaPak::IsVirtualPak()) {
+        return (s32) SatellaPak::DeleteFile(company_code, game_code, game_name, ext_name);
+    }
+
     if (company_code == 0 || game_code == 0) {
         return PFS_ERR_INVALID;
     }

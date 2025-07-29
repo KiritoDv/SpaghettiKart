@@ -257,7 +257,7 @@ void SatellaApi::ListPaks(DefaultCallback callback) {
     );
 
     if (response.status_code == (long) ResponseCodes::OK) {
-        this->paks = std::make_shared<std::vector<ControllerPak>>(json::parse(response.text).get<std::vector<ControllerPak>>());
+        this->paks = std::make_shared<std::vector<VirtualControllerPak>>(json::parse(response.text).get<std::vector<VirtualControllerPak>>());
         callback({ ResponseCodes::OK, "Packs listed successfully." });
     } else {
         callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
@@ -279,7 +279,7 @@ void SatellaApi::CreatePak(DefaultCallback callback) {
         );
 
         if (response.status_code == (long) ResponseCodes::OK) {
-            auto pak = json::parse(response.text).get<ControllerPak>();
+            auto pak = json::parse(response.text).get<VirtualControllerPak>();
             if (paks) {
                 paks->push_back(pak);
             }
@@ -320,7 +320,7 @@ void SatellaApi::UploadPak(const std::string& pakId, DefaultCallback callback) {
     });
 }
 
-void SatellaApi::UpdatePak(const ControllerPak& pak, DefaultCallback callback) {
+void SatellaApi::UpdatePak(const VirtualControllerPak& pak, DefaultCallback callback) {
     if (!session || session->token.empty()) {
         callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
         return;
@@ -363,7 +363,7 @@ void SatellaApi::InsertPak(const std::string& pakId, DefaultCallback callback) {
         if (response.status_code == (long) ResponseCodes::OK) {
             auto data = std::vector<uint8_t>(response.text.begin(), response.text.end());
             currentPak = std::make_shared<SatellaPakData>(SatellaPak::LoadPak(data));
-            currentPak->header.pakId = pakId;
+            currentPak->pakId = pakId;
             callback({ ResponseCodes::OK, "Pack downloaded successfully." });
         } else {
             callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
@@ -387,7 +387,7 @@ void SatellaApi::DeletePak(const std::string& pakId, DefaultCallback callback) {
         if (response.status_code == (long) ResponseCodes::OK) {
             if (paks) {
                 paks->erase(std::remove_if(paks->begin(), paks->end(),
-                    [&pakId](const ControllerPak& pak) { return pak.pakId == pakId; }), paks->end());
+                    [&pakId](const VirtualControllerPak& pak) { return pak.pakId == pakId; }), paks->end());
             }
             callback({ ResponseCodes::OK, "Pack deleted successfully." });
         } else {

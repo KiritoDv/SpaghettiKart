@@ -34,7 +34,7 @@ void from_json(const json& j, User& user) {
     }
 }
 
-void to_json(json& j, const ControllerPak& pak) {
+void to_json(json& j, const VirtualControllerPak& pak) {
     j = json{
         CNV(pak, pakId),
         CNV(pak, ownerId),
@@ -46,7 +46,7 @@ void to_json(json& j, const ControllerPak& pak) {
     };
 }
 
-void from_json(const json& j, ControllerPak& pak) {
+void from_json(const json& j, VirtualControllerPak& pak) {
     LINK(pak, pakId);
     LINK(pak, ownerId);
     LINK(pak, name);
