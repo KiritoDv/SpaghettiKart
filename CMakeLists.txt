@@ -360,7 +360,7 @@ if(WIN32)
     set(YAML_BUILD_SHARED_LIBS OFF)
     set(BUILD_SHARED_LIBS OFF)
     set(BUILD_EXAMPLES OFF)
-elseif(APPLE)
+elseif(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "NintendoSwitch")
     set(CPR_USE_SYSTEM_CURL TRUE)
 endif()
 FetchContent_Declare(
