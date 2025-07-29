@@ -44,9 +44,7 @@ void PortMenu::RemoveSidebarEntry(std::string sectionName, std::string sidebarNa
     assert(!sidebarName.empty());
     auto& sidebars = menuEntries.at(sectionName).sidebars;
     if (sidebars.contains(sidebarName)) {
-        sidebars.erase(sidebarName);
-        auto& sidebarOrder = menuEntries.at(sectionName).sidebarOrder;
-        sidebarOrder.erase(std::remove(sidebarOrder.begin(), sidebarOrder.end(), sidebarName), sidebarOrder.end());
+        sidebars.at(sidebarName).markForDelete = true;
     }
 }
 

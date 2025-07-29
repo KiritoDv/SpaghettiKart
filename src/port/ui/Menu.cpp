@@ -687,7 +687,8 @@ void Menu::DrawElement() {
     std::string sectionIndex = CVarGetString(sidebarCvar, "");
     if (!sidebar->contains(sectionIndex)) {
         sectionIndex = sidebar->begin()->first;
-    }
+    };
+
     float sectionCenterX = pos.x + (sidebarWidth / 2);
     float topY = pos.y;
     ImGui::SetNextWindowSizeConstraints({ sidebarWidth, 0 }, { sidebarWidth, columnHeight });
@@ -800,5 +801,13 @@ void Menu::DrawElement() {
         poppedPos = ImGui::GetWindowPos();
     }
     ImGui::End();
+
+    if(sidebar->contains(sectionIndex) && sidebar->at(sectionIndex).markForDelete) {
+        sidebar->erase(sectionIndex);
+        menuEntries.at(headerIndex).sidebarOrder.erase(
+            std::remove(menuEntries.at(headerIndex).sidebarOrder.begin(), menuEntries.at(headerIndex).sidebarOrder.end(),
+                        sectionIndex),
+            menuEntries.at(headerIndex).sidebarOrder.end());
+    }
 }
 } // namespace Ship

@@ -247,6 +247,7 @@ struct disabledInfo {
 struct SidebarEntry {
     uint32_t columnCount;
     std::vector<std::vector<WidgetInfo>> columnWidgets;
+    bool markForDelete = false;
 };
 
 // Contains entries for what's listed in the header at the top, including the name displayed on the top bar (label),
