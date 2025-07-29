@@ -257,7 +257,12 @@ void SatellaApi::ListPaks(DefaultCallback callback) {
     );
 
     if (response.status_code == (long) ResponseCodes::OK) {
-        this->paks = std::make_shared<std::vector<VirtualControllerPak>>(json::parse(response.text).get<std::vector<VirtualControllerPak>>());
+        auto data = json::parse(response.text).get<std::vector<VirtualControllerPak>>();
+        if(this->paks == nullptr) {
+            this->paks = std::make_shared<std::vector<VirtualControllerPak>>(data);
+        } else {
+            *this->paks = data;
+        }
         callback({ ResponseCodes::OK, "Packs listed successfully." });
     } else {
         callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
@@ -401,38 +406,81 @@ void SatellaApi::SaveSession() {
         return;
     }
 
-    json sessionJson = *session;
-    std::ofstream sessionFile(Ship::Context::GetPathRelativeToAppDirectory("session.json"));
-    if (sessionFile.is_open()) {
-        sessionFile << sessionJson.dump(4);
-        sessionFile.close();
+    json satella = {
+        {
+            "session",
+            {
+                { "token", session->token },
+                { "refreshToken", session->refreshToken },
+                { "expiresAt", session->expiresAt }
+            }
+        },
+        {
+            "controllerPak",
+            currentPak ? currentPak->pakId : ""
+        }
+    };
+
+    std::ofstream satellaFile(Ship::Context::GetPathRelativeToAppDirectory("satella.json"));
+    if (satellaFile.is_open()) {
+        satellaFile << satella.dump(4);
+        satellaFile.close();
     } else {
-        GameEngine::Instance->context->GetLogger()->error("Failed to save session to file.");
+        GameEngine::Instance->context->GetLogger()->error("Failed to save satella to file.");
     }
 }
 
 void SatellaApi::LoadSession() {
-    std::ifstream sessionFile(Ship::Context::GetPathRelativeToAppDirectory("session.json"));
-    if (sessionFile.is_open()) {
-        json sessionJson;
-        sessionFile >> sessionJson;
-        sessionFile.close();
+    std::ifstream satellaFile(Ship::Context::GetPathRelativeToAppDirectory("satella.json"));
+    if (satellaFile.is_open()) {
+        json satellaJson;
+        satellaFile >> satellaJson;
+        satellaFile.close();
 
-        if (sessionJson.contains("token") && sessionJson.contains("refreshToken") && sessionJson.contains("expiresAt")) {
-            this->session = std::make_shared<AuthSession>(sessionJson.get<AuthSession>());
-            this->friends = std::make_shared<std::vector<User>>();
-            SyncUser([&](const SatellaResponse& response) {
-                if (response.isValid) {
-                    GameEngine::Instance->context->GetLogger()->info("User synced successfully after loading session.");
-                } else {
-                    this->user = nullptr;
-                    this->session = nullptr;
-                    GameEngine::Instance->context->GetLogger()->warn("Failed to sync user after loading session: {}", response.message);
-                }
-            });
+        if (satellaJson.contains("session")) {
+            auto sessionJson = satellaJson["session"];
+            if (sessionJson.contains("token") && sessionJson.contains("refreshToken") && sessionJson.contains("expiresAt")) {
+                this->session = std::make_shared<AuthSession>(sessionJson.get<AuthSession>());
+                this->friends = std::make_shared<std::vector<User>>();
+                SyncUser([&](const SatellaResponse& response) {
+                    if (response.isValid) {
+                        GameEngine::Instance->context->GetLogger()->info("User synced successfully after loading session.");
+                    } else {
+                        this->user = nullptr;
+                        this->session = nullptr;
+                        GameEngine::Instance->context->GetLogger()->warn("Failed to sync user after loading session: {}", response.message);
+                    }
+                });
+            } else {
+                GameEngine::Instance->context->GetLogger()->warn("Session file is missing required fields.");
+            }
         } else {
-            GameEngine::Instance->context->GetLogger()->warn("Session file is missing required fields.");
+            GameEngine::Instance->context->GetLogger()->warn("Session data not found in satella.json.");
         }
+
+        if (satellaJson.contains("controllerPak")) {
+            std::string pakId = satellaJson["controllerPak"].get<std::string>();
+            if (!pakId.empty()) {
+                ListPaks([this, pakId](const SatellaResponse& response) {
+                    if (response.isValid && paks) {
+                        auto it = std::find_if(paks->begin(), paks->end(),
+                            [&pakId](const VirtualControllerPak& pak) { return pak.pakId == pakId; });
+                        if (it != paks->end()) {
+                            InsertPak(it->pakId, [](const SatellaResponse& response) {
+                                if (!response.isValid) {
+                                    GameEngine::Instance->context->GetLogger()->warn("Failed to insert pack after loading session: {}", response.message);
+                                }
+                            });
+                        } else {
+                            GameEngine::Instance->context->GetLogger()->warn("Pack with ID {} not found in loaded packs.", pakId);
+                        }
+                    } else {
+                        GameEngine::Instance->context->GetLogger()->warn("Failed to list packs after loading session: {}", response.message);
+                    }
+                });
+            }
+        }
+
     } else {
         GameEngine::Instance->context->GetLogger()->warn("No session file found, starting without a session.");
     }

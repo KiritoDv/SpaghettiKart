@@ -37,6 +37,8 @@ public:
     void DeletePak(const std::string& pakId, DefaultCallback callback);
 
     void LoadSession();
+    void SaveSession();
+
     void EjectPak() {
         this->currentPak = nullptr;
     }
@@ -60,9 +62,6 @@ public:
     std::shared_ptr<std::vector<VirtualControllerPak>> GetPaks() const {
         return paks;
     }
-
-private:
-    void SaveSession();
 
 protected:
     std::shared_ptr<User> user;

@@ -303,6 +303,7 @@ void DrawControllerPakCard(VirtualControllerPak& pak) {
                 api->InsertPak(pak.pakId, [pak](const SatellaResponse& response) {
                     if (response.isValid) {
                         GameEngine::Instance->context->GetLogger()->info("Inserted Controller Pak: {}", pak.name);
+                        api->SaveSession();
                     } else {
                         GameEngine::Instance->context->GetLogger()->error("Error inserting Controller Pak: {}", response.message);
                     }
@@ -341,7 +342,7 @@ void DrawControllerPakCard(VirtualControllerPak& pak) {
 
     if(ImGui::BeginPopup(("Controller Pak Options##CPO" + pak.pakId).c_str())) {
         ImGui::Text("Name:");
-        ImGui::PushItemWidth(200);
+        ImGui::PushItemWidth(250);
         if(ImGui::InputText("##CPOName", mPakName, ARRAY_SIZE(mPakName))){
             mSelectedPak->name = std::string(mPakName);
         }
@@ -349,7 +350,12 @@ void DrawControllerPakCard(VirtualControllerPak& pak) {
         // List friends to handle access
         ImGui::Text("Allow Access:");
         ImGui::BeginChild("##PakAccessList", ImVec2(0, 100), true);
+        bool hasFriends = false;
         for (const auto& friendUser : *api->GetFriends()) {
+            if(friendUser.status != FriendRequestStatus::ACCEPTED) {
+                continue;
+            }
+
             bool hasAccess = std::find(pak.access.begin(), pak.access.end(), friendUser.ulid) != pak.access.end();
             ImGui::PushID(friendUser.ulid.c_str());
             if (ImGui::Checkbox(friendUser.alias.c_str(), &hasAccess)) {
@@ -360,6 +366,10 @@ void DrawControllerPakCard(VirtualControllerPak& pak) {
                 }
             }
             ImGui::PopID();
+            hasFriends = true;
+        }
+        if (!hasFriends) {
+            ImGui::Text("No friends available.");
         }
         ImGui::EndChild();
         if(ImGui::Button("Save")) {
