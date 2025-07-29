@@ -95,6 +95,7 @@ expected/*
 !/sound/**/*custom*/**/*.aiff
 !/assets/**/*custom*.bin
 !/assets/**/*custom*/**/*.bin
+!/assets/satella/*.*
 
 # Doxygen
 docs/html/*
