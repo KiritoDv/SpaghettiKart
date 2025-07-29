@@ -117,6 +117,7 @@ default.sav
 imgui.ini
 spaghettify.cfg.json
 satella.json
+*.sav
 
 # modding
 *.wasm
