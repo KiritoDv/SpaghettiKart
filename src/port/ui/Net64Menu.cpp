@@ -487,19 +487,31 @@ void Net64Menu::AddRegisterTab() {
             options.size = UIWidgets::Sizes::Inline;
             options.tooltip = "Sync";
             if (UIWidgets::Button("Link Account", options)) {
-                memset(mCodeBuf, 0, sizeof(mCodeBuf));
-                api->LinkAccount(std::string(mCodeBuf), DeviceType::MAC, [&](const SatellaResponse& _) {
-                api->SyncUser([&](const SatellaResponse& response) {
-                        if(response.isValid) {
-                            GameEngine::Instance->context->GetLogger()->info("Successfully linked account: {}", response.message);
-                            mPortMenu->RemoveSidebarEntry("Net64", "Register");
-                            mNet64Menu->AddAuthTabs();
-                        } else {
-                            GameEngine::Instance->context->GetLogger()->error("Error linking account: {}", response.message);
-                        }
+                DeviceType deviceType = DeviceType::MAC;
+                #ifdef WIN32
+                    deviceType = DeviceType::WINDOWS;
+                #elif defined(__linux__)
+                    deviceType = DeviceType::LINUX;
+                #elif defined(__SWITCH__)
+                    deviceType = DeviceType::SWITCH;
+                #endif
+
+                api->LinkAccount(std::string(mCodeBuf), deviceType, [&](const SatellaResponse& linkRes) {
+                    if(!linkRes.isValid){
+                        return;
+                    }
+                    api->SyncUser([&](const SatellaResponse& response) {
+                            if(response.isValid) {
+                                GameEngine::Instance->context->GetLogger()->info("Successfully linked account: {}", response.message);
+                                mPortMenu->RemoveSidebarEntry("Net64", "Register");
+                                mNet64Menu->AddAuthTabs();
+                            } else {
+                                GameEngine::Instance->context->GetLogger()->error("Error linking account: {}", response.message);
+                            }
+                        });
                     });
-                });
-            }
+                    memset(mCodeBuf, 0, sizeof(mCodeBuf));
+                }
         #ifndef __SWITCH__
             ImGui::SameLine();
             if (UIWidgets::Button("Register", options)) {
