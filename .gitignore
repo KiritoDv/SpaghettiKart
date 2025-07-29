@@ -116,7 +116,7 @@ torch.hash.yml
 default.sav
 imgui.ini
 spaghettify.cfg.json
-session.json
+satella.json
 
 # modding
 *.wasm
