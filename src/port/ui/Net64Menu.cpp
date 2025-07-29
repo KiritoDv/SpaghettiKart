@@ -70,6 +70,10 @@ enum class FriendCardType {
 
 void DrawFriendCard(User& user, FriendCardType type) {
     auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
+    auto& style = ImGui::GetStyle();
+    float defaultSpacing = style.ItemSpacing.y;
+    style.ItemSpacing.y = 4;
+
     float imageSize = 80;
     const char* name = user.alias.c_str();
     float textWidth = ImGui::CalcTextSize(name).x;
@@ -214,10 +218,15 @@ void DrawFriendCard(User& user, FriendCardType type) {
 
     ImGui::EndGroup();
     ImGui::PopID();
+    style.ItemSpacing.y = defaultSpacing;
 }
 
 void DrawControllerPakCard(VirtualControllerPak& pak) {
     auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
+    auto& style = ImGui::GetStyle();
+    float defaultSpacing = style.ItemSpacing.y;
+    style.ItemSpacing.y = 4;
+
     ImVec2 imageSize(128, 97);
     const char* name = pak.name.c_str();
     float textWidth = ImGui::CalcTextSize(name).x;
@@ -399,6 +408,7 @@ void DrawControllerPakCard(VirtualControllerPak& pak) {
     }
 
     ImGui::EndGroup();
+    style.ItemSpacing.y = defaultSpacing;
 }
 
 void DrawEmptyControllerPakCard() {
@@ -480,45 +490,40 @@ void Net64Menu::AddRegisterTab() {
         .CVar("gNet64.LinkCode")
         .Options(InputTextOptions(mCodeBuf, ARRAY_SIZE(mCodeBuf), 0, "123456"));
 
-    mPortMenu->AddWidget(path, "AccountActions", WIDGET_CUSTOM)
-        .CustomFunction([](WidgetInfo& info) {
-            UIWidgets::ButtonOptions options = {};
-            options.color = UIWidgets::Colors::Indigo;
-            options.size = UIWidgets::Sizes::Inline;
-            options.tooltip = "Sync";
-            if (UIWidgets::Button("Link Account", options)) {
-                DeviceType deviceType = DeviceType::MAC;
-                #ifdef WIN32
-                    deviceType = DeviceType::WINDOWS;
-                #elif defined(__linux__)
-                    deviceType = DeviceType::LINUX;
-                #elif defined(__SWITCH__)
-                    deviceType = DeviceType::SWITCH;
-                #endif
+    mPortMenu->AddWidget(path, "Link Account", WIDGET_BUTTON)
+        .Options(UIWidgets::ButtonOptions().Size(UIWidgets::Sizes::Inline))
+        .Callback([](WidgetInfo& info) {
+            DeviceType deviceType = DeviceType::MAC;
+            #ifdef WIN32
+                deviceType = DeviceType::WINDOWS;
+            #elif defined(__linux__)
+                deviceType = DeviceType::LINUX;
+            #elif defined(__SWITCH__)
+                deviceType = DeviceType::SWITCH;
+            #endif
 
-                api->LinkAccount(std::string(mCodeBuf), deviceType, [&](const SatellaResponse& linkRes) {
-                    if(!linkRes.isValid){
-                        return;
-                    }
-                    api->SyncUser([&](const SatellaResponse& response) {
-                            if(response.isValid) {
-                                GameEngine::Instance->context->GetLogger()->info("Successfully linked account: {}", response.message);
-                                mPortMenu->RemoveSidebarEntry("Net64", "Register");
-                                mNet64Menu->AddAuthTabs();
-                            } else {
-                                GameEngine::Instance->context->GetLogger()->error("Error linking account: {}", response.message);
-                            }
-                        });
-                    });
-                    memset(mCodeBuf, 0, sizeof(mCodeBuf));
+            api->LinkAccount(std::string(mCodeBuf), deviceType, [&](const SatellaResponse& linkRes) {
+                if(!linkRes.isValid){
+                    return;
                 }
-        #ifndef __SWITCH__
-            ImGui::SameLine();
-            if (UIWidgets::Button("Register", options)) {
-                LaunchBrowser(api->GetAuthURL());
-            }
-        #endif
+                api->SyncUser([&](const SatellaResponse& response) {
+                    if(response.isValid) {
+                        GameEngine::Instance->context->GetLogger()->info("Successfully linked account: {}", response.message);
+                        mPortMenu->RemoveSidebarEntry("Net64", "Register");
+                        mNet64Menu->AddAuthTabs();
+                    } else {
+                        GameEngine::Instance->context->GetLogger()->error("Error linking account: {}", response.message);
+                    }
+                });
+            });
+            memset(mCodeBuf, 0, sizeof(mCodeBuf));
         });
+    
+    mPortMenu->AddWidget(path, "Register", WIDGET_BUTTON)
+        .Options(UIWidgets::ButtonOptions().Size(UIWidgets::Sizes::Inline))
+        .Callback([](WidgetInfo& info) {
+            LaunchBrowser(api->GetAuthURL());
+        }).SameLine(true);
 }
 
 void Net64Menu::AddAccountTab(){
@@ -534,7 +539,7 @@ void Net64Menu::AddAccountTab(){
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
     if(avatar != nullptr){
         mPortMenu->AddWidget(path, "Avatar:", WIDGET_TEXT);
-        mPortMenu->AddWidget(path, "##AvatarImage", WIDGET_CUSTOM)
+        mPortMenu->AddWidget(path, "AvatarImage", WIDGET_CUSTOM)
             .CustomFunction([avatar](WidgetInfo& info) {
                 ImGui::Image((ImTextureID) avatar, ImVec2(80, 80));
             });
@@ -590,24 +595,12 @@ void Net64Menu::AddFriendsTab() {
     WidgetPath path = { "Net64", "Friends", SECTION_COLUMN_1 };
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
 
-    mPortMenu->AddWidget(path, "FriendsTitle", WIDGET_CUSTOM)
-        .CustomFunction([](WidgetInfo& info) {
-            DrawUpdateTitle("Friends", []() {
-                api->GetFriends([](const SatellaResponse& response) {
-                    if (response.isValid) {
-                        GameEngine::Instance->context->GetLogger()->info("Friends list updated successfully.");
-                    } else {
-                        GameEngine::Instance->context->GetLogger()->error("Error updating friends list: {}", response.message);
-                    }
-                });
-            });
-        });
-    
+    mPortMenu->AddWidget(path, "Friends", WIDGET_TEXT);
+
     mPortMenu->AddWidget(path, "Search Users", WIDGET_TEXT);
     mPortMenu->AddWidget(path, "##SearchFriendsInput", WIDGET_INPUT_TEXT)
         .Options(InputTextOptions(mSearchBuf, ARRAY_SIZE(mSearchBuf), 0, "Search by username"))
         .PostFunc([](WidgetInfo& info) {
-            // Draw the search results if any
             if (!mSearchResults.empty()) {
                 ImGui::BeginChild("SearchResults", ImVec2(0, 200), true);
                 for (auto& user : mSearchResults) {
@@ -640,7 +633,7 @@ void Net64Menu::AddFriendsTab() {
             mPortMenu->AddWidget(path, "Friends List", WIDGET_TEXT);
             auto friends = api->GetFriends();
 
-            mPortMenu->AddWidget(path, "FriendsCard", WIDGET_CUSTOM)
+            mPortMenu->AddWidget(path, "FriendsList", WIDGET_CUSTOM)
                 .CustomFunction([friends](WidgetInfo& info) {
                     bool hasFriends = false;
                     for (auto& user : *friends) {
@@ -659,16 +652,20 @@ void Net64Menu::AddFriendsTab() {
 
             mPortMenu->AddWidget(path, "Pending Friend Requests", WIDGET_TEXT);
 
-            mPortMenu->AddWidget(path, "PendingFriendsCard", WIDGET_CUSTOM)
+            mPortMenu->AddWidget(path, "PendingFriendsList", WIDGET_CUSTOM)
                 .CustomFunction([friends](WidgetInfo& info) {
                     bool hasPendingFriends = false;
+                    size_t count = 0;
                     for (auto& user : *friends) {
+                        count++;
                         if(user.status == FriendRequestStatus::ACCEPTED) {
                             continue;
                         }
-                        ImGui::SameLine();
                         DrawFriendCard(user, FriendCardType::Pending);
                         hasPendingFriends = true;
+                        if(count <= friends->size() - 1) {
+                            ImGui::SameLine();
+                        }
                     }
 
                     if (!hasPendingFriends) {
@@ -679,6 +676,24 @@ void Net64Menu::AddFriendsTab() {
             GameEngine::Instance->context->GetLogger()->error("Error fetching friends: {}", response.message);
         }
     });
+
+    mPortMenu->AddWidget(path, "Reload " ICON_FA_UNDO, WIDGET_BUTTON)
+        .Options(UIWidgets::ButtonOptions()
+            .Size(UIWidgets::Sizes::Inline).Color(UIWidgets::Colors::Indigo)
+            .Tooltip("Reload Friend List")
+        )
+        .PreFunc([](WidgetInfo& info) {
+            ImGui::Dummy(ImVec2(0, 0));
+        })
+        .Callback([](WidgetInfo& info) {
+            api->GetFriends([](const SatellaResponse& response) {
+                if (response.isValid) {
+                    GameEngine::Instance->context->GetLogger()->info("Friends list updated successfully.");
+                } else {
+                    GameEngine::Instance->context->GetLogger()->error("Error updating friends list: {}", response.message);
+                }
+            });
+        });
 }
 
 void Net64Menu::AddControllerPaksTab() {
@@ -686,18 +701,7 @@ void Net64Menu::AddControllerPaksTab() {
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
     auto user = api->GetUser();
     api->ListPaks([&](const SatellaResponse& response) {
-        mPortMenu->AddWidget(path, "ControllerPaksListTitle", WIDGET_CUSTOM)
-            .CustomFunction([](WidgetInfo& info) {
-                DrawUpdateTitle("Controller Paks", []() {
-                    api->ListPaks([](const SatellaResponse& response) {
-                        if (response.isValid) {
-                            GameEngine::Instance->context->GetLogger()->info("Controller Paks updated successfully.");
-                        } else {
-                            GameEngine::Instance->context->GetLogger()->error("Error updating Controller Paks: {}", response.message);
-                        }
-                    });
-                });
-            });
+        mPortMenu->AddWidget(path, "Controller Pak", WIDGET_TEXT);
         if (response.isValid) {
             auto paks = api->GetPaks();
             auto user = api->GetUser();
@@ -708,12 +712,13 @@ void Net64Menu::AddControllerPaksTab() {
                         if(pak.ownerId == api->GetUser()->ulid) {
                             count++;
                         }
-                        ImGui::SameLine();
                         DrawControllerPakCard(pak);
+                        if(count < 3) {
+                            ImGui::SameLine();
+                        }
                     }
 
                     if(count < 3){
-                        ImGui::SameLine();
                         DrawEmptyControllerPakCard();
                     }
                 });
@@ -721,6 +726,23 @@ void Net64Menu::AddControllerPaksTab() {
             GameEngine::Instance->context->GetLogger()->error("Error fetching controller paks: {}", response.message);
         }
     });
+    mPortMenu->AddWidget(path, "Reload " ICON_FA_UNDO, WIDGET_BUTTON)
+        .Options(UIWidgets::ButtonOptions()
+            .Size(UIWidgets::Sizes::Inline).Color(UIWidgets::Colors::Indigo)
+            .Tooltip("Reload Controller Paks")
+        )
+        .PreFunc([](WidgetInfo& info) {
+            ImGui::Dummy(ImVec2(0, 4));
+        })
+        .Callback([](WidgetInfo& info) {
+            api->ListPaks([](const SatellaResponse& response) {
+                if (response.isValid) {
+                    GameEngine::Instance->context->GetLogger()->info("Controller Paks reloaded successfully.");
+                } else {
+                    GameEngine::Instance->context->GetLogger()->error("Error reloading Controller Paks: {}", response.message);
+                }
+            });
+        });
 }
 
 void Net64Menu::AddAuthTabs() {
