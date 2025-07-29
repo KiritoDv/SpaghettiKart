@@ -5,7 +5,7 @@
 #include <cpr/cpr.h>
 #include <thread>
 
-#define SATELLA_API_BASE_URL "http://localhost:8080/v1"
+#define SATELLA_API_BASE_URL "https://satella.net64.dev/v1"
 #define SATELLA_MAX_TIMEOUT 10 * 1000
 
 #define SATELLA_API_KEY "change-it"
