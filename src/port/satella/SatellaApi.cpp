@@ -86,12 +86,28 @@ void SatellaApi::SyncUser(DefaultCallback callback) {
 }
 
 void SatellaApi::Logout(DefaultCallback callback) {
-    session.reset();
-    currentPak.reset();
-    friends.reset();
-    paks.reset();
-    SaveSession();
-    callback({ ResponseCodes::OK, "Logged out successfully." });
+    if (!session || session->token.empty()) {
+        callback({ ResponseCodes::UNAUTHORIZED, "No active session found." });
+        return;
+    }
+
+    cpr::Response response = cpr::Post(
+        cpr::Url{ SATELLA_API_BASE_URL "/auth/logout" },
+        cpr::Timeout{ SATELLA_MAX_TIMEOUT },
+        DEFAULT_AUTH
+        SSL_OPTIONS
+    );
+
+    if (response.status_code == (long) ResponseCodes::OK) {
+        session.reset();
+        currentPak.reset();
+        friends.reset();
+        paks.reset();
+        SaveSession();
+        callback({ ResponseCodes::OK, "Logged out successfully." });
+    } else {
+        callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
+    }
 }
 
 void SatellaApi::DownloadAvatar(const User& _user) {
