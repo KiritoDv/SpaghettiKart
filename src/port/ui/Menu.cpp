@@ -599,7 +599,12 @@ void Menu::DrawElement() {
     bool autoFocus = CVarGetInteger("gSettings.Menu.SearchAutofocus", 0);
     ImGui::BeginChild("Header Selection", headerSelSize,
                       ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysAutoResize,
-                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
+                      ImGuiWindowFlags_NoTitleBar |
+#ifdef __SWITCH__
+                      ImGuiWindowFlags_NoScrollbar );
+#else
+                      ImGuiWindowFlags_HorizontalScrollbar );
+#endif
     uint8_t curIndex = 0;
     for (auto& label : menuOrder) {
         if (curIndex != 0) {
