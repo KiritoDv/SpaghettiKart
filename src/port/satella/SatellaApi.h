@@ -1,10 +1,11 @@
 #pragma once
 
-#include "nlohmann/json.hpp"
-#include <cpr/response.h>
-#include <functional>
 #include <memory>
+#include <functional>
+#include <cpr/response.h>
+
 #include "SatellaTypes.h"
+#include "nlohmann/json.hpp"
 #include "controller_pak/SatellaPak.h"
 
 using json = nlohmann::json;
@@ -14,7 +15,7 @@ using Callback = std::function<void(const T&)>;
 
 typedef Callback<SatellaResponse> DefaultCallback;
 
-class SatellaApi {
+class SatellaApi : public std::enable_shared_from_this<SatellaApi> {
 public:
     SatellaApi() = default;
     ~SatellaApi() = default;

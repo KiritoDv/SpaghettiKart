@@ -14,7 +14,10 @@ static char mPakName[16 + 1] = { 0 };
 static char mSearchBuf[64 + 1] = { 0 };
 static std::vector<User> mSearchResults;
 static VirtualControllerPak* mSelectedPak;
-static SatellaApi* api;
+static std::shared_ptr<SatellaApi> api;
+
+static int mFriendCount = 0;
+static int mPendingCount = 0;
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
@@ -47,6 +50,19 @@ std::string toHex(int value) {
     std::stringstream ss;
     ss << std::hex << value; // use std::hex for hex format
     return ss.str();
+}
+
+void UpdateFriendCount(){
+    mFriendCount = 0;
+    mPendingCount = 0;
+    auto friends = api->GetFriends();
+    for (auto& user : *friends) {
+        if(user.status == FriendRequestStatus::ACCEPTED) {
+            mFriendCount++;
+        } else {
+            mPendingCount++;
+        }
+    }
 }
 
 #ifndef __SWITCH__
@@ -158,6 +174,7 @@ void DrawFriendCard(User& user, FriendCardType type) {
                     GameEngine::Instance->context->GetLogger()->info("Removing friend {}", user.username);
                     api->RemoveFriend(user.ulid, [user](const SatellaResponse& response) {
                         if (response.isValid) {
+                            UpdateFriendCount();
                             GameEngine::Instance->context->GetLogger()->info("Removed friend {}", user.username);
                         } else {
                             GameEngine::Instance->context->GetLogger()->error("Error removing friend: {}", response.message);
@@ -172,6 +189,7 @@ void DrawFriendCard(User& user, FriendCardType type) {
                 if (ImGui::Button("Cancel")) {
                     api->ModifyFriendRequest(user.ulid, false, [user](const SatellaResponse& response) {
                         if (response.isValid) {
+                            UpdateFriendCount();
                             GameEngine::Instance->context->GetLogger()->info("Cancelled friend request to {}", user.username);
                         } else {
                             GameEngine::Instance->context->GetLogger()->error("Error cancelling friend request: {}", response.message);
@@ -187,6 +205,7 @@ void DrawFriendCard(User& user, FriendCardType type) {
                     api->ModifyFriendRequest(
                         user.ulid, true, [user](const SatellaResponse& response) {
                             if (response.isValid) {
+                                UpdateFriendCount();
                                 GameEngine::Instance->context->GetLogger()->info("Accepted friend request from {}",
                                                                                  user.username);
                             } else {
@@ -202,6 +221,7 @@ void DrawFriendCard(User& user, FriendCardType type) {
                     api->ModifyFriendRequest(
                         user.ulid, false, [user](const SatellaResponse& response) {
                             if (response.isValid) {
+                                UpdateFriendCount();
                                 GameEngine::Instance->context->GetLogger()->info("Declined friend request from {}",
                                                                                  user.username);
                             } else {
@@ -518,12 +538,14 @@ void Net64Menu::AddRegisterTab() {
             });
             memset(mCodeBuf, 0, sizeof(mCodeBuf));
         });
-    
+
+#ifndef __SWITCH__
     mPortMenu->AddWidget(path, "Register", WIDGET_BUTTON)
         .Options(UIWidgets::ButtonOptions().Size(UIWidgets::Sizes::Inline))
         .Callback([](WidgetInfo& info) {
             LaunchBrowser(api->GetAuthURL());
         }).SameLine(true);
+#endif
 }
 
 void Net64Menu::AddAccountTab(){
@@ -632,31 +654,21 @@ void Net64Menu::AddFriendsTab() {
         if (response.isValid) {
             mPortMenu->AddWidget(path, "Friends List", WIDGET_TEXT);
             auto friends = api->GetFriends();
-            size_t friendCount = 0;
-            size_t pendingCount = 0;
-
-            for (auto& user : *friends) {
-                if(user.status == FriendRequestStatus::ACCEPTED) {
-                    friendCount++;
-                } else {
-                    pendingCount++;
-                }
-            }
-
+            UpdateFriendCount();
             mPortMenu->AddWidget(path, "FriendsList", WIDGET_CUSTOM)
-                .CustomFunction([friends, friendCount](WidgetInfo& info) {
+                .CustomFunction([friends](WidgetInfo& info) {
                     size_t count = 0;
                     for (auto& user : *friends) {
                         if(user.status != FriendRequestStatus::ACCEPTED) {
                             continue;
                         }
                         DrawFriendCard(user, FriendCardType::Friend);
-                        if (count++ < friendCount - 1) {
+                        if (count++ < mFriendCount - 1) {
                             ImGui::SameLine();
                         }
                     }
 
-                    if (friendCount == 0) {
+                    if (mFriendCount == 0) {
                         ImGui::Text("No friends found.");
                     }
                 });
@@ -664,19 +676,19 @@ void Net64Menu::AddFriendsTab() {
             mPortMenu->AddWidget(path, "Pending Friend Requests", WIDGET_TEXT);
 
             mPortMenu->AddWidget(path, "PendingFriendsList", WIDGET_CUSTOM)
-                .CustomFunction([friends, pendingCount](WidgetInfo& info) {
+                .CustomFunction([friends](WidgetInfo& info) {
                     size_t count = 0;
                     for (auto& user : *friends) {
                         if(user.status == FriendRequestStatus::ACCEPTED) {
                             continue;
                         }
                         DrawFriendCard(user, FriendCardType::Pending);
-                        if (count++ < pendingCount - 1) {
+                        if (count++ < mPendingCount - 1) {
                             ImGui::SameLine();
                         }
                     }
 
-                    if (pendingCount == 0) {
+                    if (mPendingCount == 0) {
                         ImGui::Text("No pending friend requests.");
                     }
                 });
@@ -696,6 +708,7 @@ void Net64Menu::AddFriendsTab() {
         .Callback([](WidgetInfo& info) {
             api->GetFriends([](const SatellaResponse& response) {
                 if (response.isValid) {
+                    UpdateFriendCount();
                     GameEngine::Instance->context->GetLogger()->info("Friends list updated successfully.");
                 } else {
                     GameEngine::Instance->context->GetLogger()->error("Error updating friends list: {}", response.message);

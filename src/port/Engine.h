@@ -51,8 +51,8 @@ class GameEngine {
     ImFont* fontMonoLarger;
     ImFont* fontMonoLargest;
 
-    HMAS* gHMAS;
-    SatellaApi* gSatellaApi;
+    std::shared_ptr<HMAS> gHMAS;
+    std::shared_ptr<SatellaApi> gSatellaApi;
 
     std::unordered_map<std::string, uint8_t> bankMapTable;
     GameEngine();

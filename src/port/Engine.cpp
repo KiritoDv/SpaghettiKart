@@ -361,9 +361,10 @@ int GameEngine::ShowYesNoBox(const char* title, const char* box) {
 
 void GameEngine::Create() {
     const auto instance = Instance = new GameEngine();
-    instance->gHMAS = new HMAS();
+    instance->gHMAS = std::make_shared<HMAS>();
+    instance->gSatellaApi = std::make_shared<SatellaApi>();
+
     instance->AudioInit();
-    instance->gSatellaApi = new SatellaApi();
     instance->gSatellaApi->LoadSession();
     GameUI::SetupGuiElements();
 #if defined(__SWITCH__) || defined(__WIIU__)
