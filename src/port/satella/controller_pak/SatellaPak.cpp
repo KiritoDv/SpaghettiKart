@@ -18,6 +18,7 @@ SatellaPakData SatellaPak::LoadPak(std::vector<uint8_t> data) {
 
     auto reader = Ship::BinaryReader((char*) data.data(), data.size());
     SatellaPakData pak;
+    memset(&pak, 0, sizeof(SatellaPakData));
 
     for(size_t i = 0; i < MaxFiles; i++){
         pak.header[i].size = reader.ReadUInt32();
@@ -39,19 +40,18 @@ SatellaPakData SatellaPak::LoadPak(std::vector<uint8_t> data) {
     return pak;
 }
 
-std::vector<uint8_t> SatellaPak::SavePak(const SatellaPakData& pak) {
+std::vector<uint8_t> SatellaPak::SavePak(std::shared_ptr<SatellaPakData> pak) {
     auto writer = Ship::BinaryWriter();
 
     // Write pak header
-    
     for(size_t i = 0; i < MaxFiles; i++){
-        writer.Write(pak.header[i].size);
-        writer.Write(pak.header[i].gameCode);
-        writer.Write(pak.header[i].companyCode);
-        writer.Write((char*) pak.header[i].extName, ExtNameSize);
-        writer.Write((char*) pak.header[i].gameName, MaxFiles);
+        writer.Write(pak->header[i].size);
+        writer.Write(pak->header[i].gameCode);
+        writer.Write(pak->header[i].companyCode);
+        writer.Write((char*) pak->header[i].extName, ExtNameSize);
+        writer.Write((char*) pak->header[i].gameName, MaxFiles);
 
-        auto& file = pak.files[i];
+        auto& file = pak->files[i];
         writer.Write((uint32_t) file.data.size());
         if(file.data.empty()) {
             continue;

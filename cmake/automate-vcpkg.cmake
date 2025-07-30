@@ -163,7 +163,7 @@ macro(vcpkg_install_packages)
     endif()
 
     execute_process(
-        COMMAND ${VCPKG_EXEC} install ${ARGN}
+        COMMAND ${VCPKG_EXEC} install --classic ${ARGN}
         WORKING_DIRECTORY ${VCPKG_ROOT}
         )
 endmacro()

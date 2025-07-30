@@ -632,20 +632,31 @@ void Net64Menu::AddFriendsTab() {
         if (response.isValid) {
             mPortMenu->AddWidget(path, "Friends List", WIDGET_TEXT);
             auto friends = api->GetFriends();
+            size_t friendCount = 0;
+            size_t pendingCount = 0;
+
+            for (auto& user : *friends) {
+                if(user.status == FriendRequestStatus::ACCEPTED) {
+                    friendCount++;
+                } else {
+                    pendingCount++;
+                }
+            }
 
             mPortMenu->AddWidget(path, "FriendsList", WIDGET_CUSTOM)
-                .CustomFunction([friends](WidgetInfo& info) {
-                    bool hasFriends = false;
+                .CustomFunction([friends, friendCount](WidgetInfo& info) {
+                    size_t count = 0;
                     for (auto& user : *friends) {
                         if(user.status != FriendRequestStatus::ACCEPTED) {
                             continue;
                         }
-                        ImGui::SameLine();
                         DrawFriendCard(user, FriendCardType::Friend);
-                        hasFriends = true;
+                        if (count++ < friendCount - 1) {
+                            ImGui::SameLine();
+                        }
                     }
 
-                    if (!hasFriends) {
+                    if (friendCount == 0) {
                         ImGui::Text("No friends found.");
                     }
                 });
@@ -653,22 +664,19 @@ void Net64Menu::AddFriendsTab() {
             mPortMenu->AddWidget(path, "Pending Friend Requests", WIDGET_TEXT);
 
             mPortMenu->AddWidget(path, "PendingFriendsList", WIDGET_CUSTOM)
-                .CustomFunction([friends](WidgetInfo& info) {
-                    bool hasPendingFriends = false;
+                .CustomFunction([friends, pendingCount](WidgetInfo& info) {
                     size_t count = 0;
                     for (auto& user : *friends) {
-                        count++;
                         if(user.status == FriendRequestStatus::ACCEPTED) {
                             continue;
                         }
                         DrawFriendCard(user, FriendCardType::Pending);
-                        hasPendingFriends = true;
-                        if(count <= friends->size() - 1) {
+                        if (count++ < pendingCount - 1) {
                             ImGui::SameLine();
                         }
                     }
 
-                    if (!hasPendingFriends) {
+                    if (pendingCount == 0) {
                         ImGui::Text("No pending friend requests.");
                     }
                 });

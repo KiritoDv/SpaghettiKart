@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 #include <string>
 #include <cstdint>
@@ -46,7 +47,7 @@ public:
     static bool IsVirtualPak();
 
     static SatellaPakData LoadPak(std::vector<uint8_t> data);
-    static std::vector<uint8_t> SavePak(const SatellaPakData& pakData);
+    static std::vector<uint8_t> SavePak(std::shared_ptr<SatellaPakData> pak);
 
     static PfsResult FreeBlocks(int32_t* bytes_not_used);
     static PfsResult AllocateFile(uint16_t company_code, uint32_t game_code, uint8_t* game_name, uint8_t* ext_name, uint32_t file_size_in_bytes, int32_t* file_no);

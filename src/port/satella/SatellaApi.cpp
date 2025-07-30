@@ -335,8 +335,10 @@ void SatellaApi::UploadPak(const std::string& pakId, DefaultCallback callback) {
         return;
     }
 
-    AsyncRequest([this, pakId, callback]() {
-        std::vector<uint8_t> data = SatellaPak::SavePak(*currentPak);
+    auto pak = this->currentPak;
+
+    AsyncRequest([pak, this, pakId, callback]() {
+        std::vector<uint8_t> data = SatellaPak::SavePak(pak);
         cpr::Buffer body(data.begin(), data.end(), "pak");
 
         cpr::Response response = cpr::Put(
