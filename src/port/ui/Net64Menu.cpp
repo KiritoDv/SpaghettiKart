@@ -134,9 +134,10 @@ void DrawFriendCard(User& user, FriendCardType type) {
         if (ImGui::Button("Add")) {
             api->AddFriend(user, [user](const SatellaResponse& response) {
                 if (response.isValid) {
-                    GameEngine::Instance->context->GetLogger()->info("Friend request sent to {}", user.username);
+                    UpdateFriendCount();
                     mSearchResults.clear();
                     memset(mSearchBuf, 0, sizeof(mSearchBuf));
+                    GameEngine::Instance->context->GetLogger()->info("Friend request sent to {}", user.username);
                 } else {
                     GameEngine::Instance->context->GetLogger()->error("Error sending friend request: {}", response.message);
                 }
