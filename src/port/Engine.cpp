@@ -565,7 +565,7 @@ void GameEngine::AudioInit() {
         auto path = "__OTR__" + sequence;
         auto seq = static_cast<AudioSequenceData*>(ResourceGetDataByName(path.c_str()));
         Instance->sequenceTable[seq->id] = path;
-        SPDLOG_INFO("Loaded sequence: {}", sequence);
+        // SPDLOG_INFO("Loaded sequence: {}", sequence);
     }
 
     if (!audio.running) {
