@@ -26,13 +26,17 @@
                     }
 
 void AsyncRequest(const std::function<void()>& func) {
+#ifndef __SWITCH__
     std::thread([func]() {
+#endif
         try {
             func();
         } catch (const std::exception& e) {
             GameEngine::Instance->context->GetLogger()->error("Async request error: {}", e.what());
         }
+#ifndef __SWITCH__
     }).detach();
+#endif
 }
 
 std::string SatellaApi::GetAuthURL() {
@@ -83,7 +87,6 @@ void SatellaApi::SyncUser(DefaultCallback callback) {
 
     if (response.status_code == (long) ResponseCodes::OK) {
         self->user = std::make_shared<User>(json::parse(response.text).get<User>());
-        DownloadAvatar(*user);
         callback({ ResponseCodes::OK, "User synced successfully." });
     } else {
         callback({ static_cast<ResponseCodes>(response.status_code), response.text, false });
@@ -188,9 +191,6 @@ void SatellaApi::SearchFriends(const std::string& query, Callback<std::vector<Us
 
         if (response.status_code == (long) ResponseCodes::OK) {
             auto users = json::parse(response.text).get<std::vector<User>>();
-            for (auto& friendUser : users) {
-                self->DownloadAvatar(friendUser);
-            }
             callback(users);
         } else {
             callback(std::vector<User>{});
@@ -465,13 +465,11 @@ void SatellaApi::DeletePak(const std::string& pakId, DefaultCallback callback) {
 }
 
 void SatellaApi::SaveSession() {
-    std::ofstream satellaFile(Ship::Context::GetPathRelativeToAppDirectory("satella.json"));
+    FILE* file = fopen(Ship::Context::GetPathRelativeToAppDirectory("satella.json").c_str(), "w");
 
-    if (!session) {
-        if (satellaFile.is_open()) {
-            satellaFile << "{}"; // Clear the file if no session exists
-            satellaFile.close();
-        }
+    if (!session && file) {
+        fwrite("{}", sizeof(char), 2, file);
+        fclose(file);
         GameEngine::Instance->context->GetLogger()->info("No session to save, satella.json cleared.");
         return;
     }
@@ -491,9 +489,10 @@ void SatellaApi::SaveSession() {
         }
     };
 
-    if (satellaFile.is_open()) {
-        satellaFile << satella.dump(4);
-        satellaFile.close();
+    if (file) {
+        std::string json_string = satella.dump(4);
+        fwrite(json_string.c_str(), sizeof(char), json_string.length(), file);
+        fclose(file);
     } else {
         GameEngine::Instance->context->GetLogger()->error("Failed to save satella to file.");
     }
@@ -502,11 +501,15 @@ void SatellaApi::SaveSession() {
 void SatellaApi::LoadSession() {
     auto self = shared_from_this();
 
-    std::ifstream satellaFile(Ship::Context::GetPathRelativeToAppDirectory("satella.json"));
-    if (satellaFile.is_open()) {
-        json satellaJson;
-        satellaFile >> satellaJson;
-        satellaFile.close();
+    FILE* file = fopen(Ship::Context::GetPathRelativeToAppDirectory("satella.json").c_str(), "r");
+    if (file) {
+        fseek(file, 0, SEEK_END);
+        size_t size = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        std::string buffer(size, '\0');
+        fread(buffer.data(), 1, size, file);
+        fclose(file);
+        json satellaJson = json::parse(buffer);
 
         if (satellaJson.contains("session")) {
             auto sessionJson = satellaJson["session"];

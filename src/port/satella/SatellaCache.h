@@ -16,7 +16,7 @@ public:
     }
 private:
 
-    static void CacheImage(const std::vector<uint8_t>& data, const std::string& path);
+    static void CacheImage(const uint8_t* data, uint32_t size, const std::string& path);
 
     // Cache for user avatars
     static std::vector<std::string> mImageCache;

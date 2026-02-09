@@ -119,7 +119,13 @@ void DrawFriendCard(User& user, FriendCardType type) {
 
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + imageOffsetX);
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10);
-    ImGui::Image((ImTextureID) gui->GetTextureByName(user.ulid), ImVec2(imageSize, imageSize));
+    auto avatar = (ImTextureID) gui->GetTextureByName(user.ulid);
+    if (avatar) {
+        // ImGui::Image(avatar, ImVec2(imageSize, imageSize));
+        ImGui::Text("Avatar: %s", user.avatar.c_str());
+    } else {
+        ImGui::Text("No Avatar");
+    }
 
     // Space and centered text
     ImGui::Spacing();
@@ -556,17 +562,23 @@ void Net64Menu::AddAccountTab(){
         return;
     }
 
-    auto avatar = Ship::Context::GetInstance()->GetWindow()->GetGui()->GetTextureByName(user->ulid);
+    printf("Adding account tab for user: %s\n", user->username.c_str());
+    api->DownloadAvatar(*user);
+    printf("Avatar downloaded for user: %s\n", user->username.c_str());
 
     WidgetPath path = { "Net64", "Account", SECTION_COLUMN_1 };
     mPortMenu->AddSidebarEntry(path.sectionName, path.sidebarName, 1);
-    if(avatar != nullptr){
-        mPortMenu->AddWidget(path, "Avatar:", WIDGET_TEXT);
-        mPortMenu->AddWidget(path, "AvatarImage", WIDGET_CUSTOM)
-            .CustomFunction([avatar](WidgetInfo& info) {
-                ImGui::Image((ImTextureID) avatar, ImVec2(80, 80));
-            });
-    }
+    mPortMenu->AddWidget(path, "Avatar:", WIDGET_TEXT);
+    mPortMenu->AddWidget(path, "AvatarImage", WIDGET_CUSTOM)
+        .CustomFunction([user](WidgetInfo& info) {
+            auto avatar = Ship::Context::GetInstance()->GetWindow()->GetGui()->GetTextureByName(user->ulid);
+            if(avatar != nullptr) {
+                // ImGui::Image((ImTextureID) avatar, ImVec2(64, 64));
+                ImGui::Text("Avatar: %s", user->avatar.c_str());
+            } else {
+                ImGui::Text("No avatar found.");
+            }
+        });
 
     mPortMenu->AddWidget(path, "ULID: " + user->ulid, WIDGET_TEXT);
     mPortMenu->AddWidget(path, "Username: " + user->username, WIDGET_TEXT);
