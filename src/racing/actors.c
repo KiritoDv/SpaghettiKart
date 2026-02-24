@@ -1173,7 +1173,6 @@ void destroy_all_actors(void) {
 void init_actors_and_load_textures(void) {
     init_red_shell_texture();
     destroy_all_actors();
-    CM_CleanWorld();
 
     gNumPermanentActors = 0;
     CM_BeginPlay();

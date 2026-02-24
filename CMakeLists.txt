@@ -224,7 +224,9 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/debug
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/tracks
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/actors
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/objects
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/sky
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/particles
     ${CMAKE_CURRENT_SOURCE_DIR}/src/enhancements
     ${CMAKE_CURRENT_SOURCE_DIR}/src/enhancements/freecam
@@ -272,8 +274,12 @@ file(GLOB_RECURSE ALL_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     "src/engine/*.h"
     "src/engine/tracks/*.c"
     "src/engine/tracks/*.h"
+    "src/engine/actors/*.cpp"
+    "src/engine/actors/*.h"
     "src/engine/objects/*.cpp"
     "src/engine/objects/*.h"
+    "src/engine/sky/*.cpp"
+    "src/engine/sky/*.h"
     "src/engine/particles/*.cpp"
     "src/engine/particles/*.h"
     "src/enhancements/*.c"

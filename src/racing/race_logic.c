@@ -414,7 +414,7 @@ void func_8028EC38(s32 arg0) {
     gRaceState = RACE_UNK;
     func_800CA330(25);
     func_800CA388(25);
-    D_800DC5B4 = 1;
+    bDrawSkybox = true;
     D_800DC5B0 = 1;
     D_800DC5B8 = 0;
     D_802BA038 = 5;
@@ -642,7 +642,7 @@ void func_8028F4E8(void) {
             func_800CA388(0x19);
             gGotoMode = START_MENU_FROM_QUIT;
             gRaceState = RACE_UNK;
-            D_800DC5B4 = 1;
+            bDrawSkybox = true;
             D_800DC5B0 = 1;
             D_800DC5B8 = 0;
             D_802BA038 = 5;
@@ -836,7 +836,7 @@ void func_8028FBD4(void) {
     gRaceState = RACE_UNK;
     func_800CA330(25);
     func_800CA388(25);
-    D_800DC5B4 = 1;
+    bDrawSkybox = true;
     D_800DC5B0 = 1;
     D_800DC5B8 = 0;
     D_802BA038 = 5;
@@ -893,7 +893,7 @@ void func_8028FCBC(void) {
             gCourseTimer = 0.0f;
             gVBlankTimer = 0.0f;
             D_800DC5B0 = 1;
-            D_800DC5B4 = 1;
+            bDrawSkybox = true;
             D_802BA034 = 0.008f;
             D_8015F894 = 0;
             if (gScreenModeSelection != SCREEN_MODE_1P) {
