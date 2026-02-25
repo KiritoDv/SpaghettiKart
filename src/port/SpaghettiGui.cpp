@@ -2,11 +2,7 @@
 #include "SpaghettiGui.h"
 #include <ship/window/gui/Gui.h>
 #include <ship/window/Window.h>
-#ifdef __SWITCH__
-#include "ConfigVersion.h"
-#else
 #include "ship/config/Config.h"
-#endif
 
 #ifdef __APPLE__
 #include <SDL_hints.h>
